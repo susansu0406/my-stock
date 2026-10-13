@@ -1,4 +1,3 @@
-HTML
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -48,7 +47,7 @@ HTML
             </div>
             <div class="border-t border-blue-500/30 my-3 pt-2 flex justify-between text-xs text-blue-200">
                 <span>質押總借款: <strong id="total-pledge-val">NT$ 0</strong></span>
-                <span>每月預估負債利息: <strong id="total-monthly-interest">NT$ 0</strong></span>
+                <span>預估每月利息: <strong id="total-monthly-interest">NT$ 0</strong></span>
             </div>
         </div>
 
@@ -71,11 +70,11 @@ HTML
 
         <!-- 券商篩選分頁 -->
         <div class="flex gap-2 overflow-x-auto pb-2 mb-4 text-xs">
-            <button onclick="filterBroker('全部')" class="broker-btn bg-blue-600 text-white px-4 py-2 rounded-full font-medium">全部</button>
-            <button onclick="filterBroker('證金')" class="broker-btn bg-gray-800 text-gray-300 px-4 py-2 rounded-full font-medium">證金</button>
-            <button onclick="filterBroker('富邦')" class="broker-btn bg-gray-800 text-gray-300 px-4 py-2 rounded-full font-medium">富邦</button>
-            <button onclick="filterBroker('國泰')" class="broker-btn bg-gray-800 text-gray-300 px-4 py-2 rounded-full font-medium">國泰</button>
-            <button onclick="filterBroker('中信')" class="broker-btn bg-gray-800 text-gray-300 px-4 py-2 rounded-full font-medium">中信</button>
+            <button onclick="filterBroker('全部')" id="btn-全部" class="broker-btn bg-blue-600 text-white px-4 py-2 rounded-full font-medium">全部 (總覽合併)</button>
+            <button onclick="filterBroker('證金')" id="btn-證金" class="broker-btn bg-gray-800 text-gray-300 px-4 py-2 rounded-full font-medium">證金</button>
+            <button onclick="filterBroker('富邦')" id="btn-富邦" class="broker-btn bg-gray-800 text-gray-300 px-4 py-2 rounded-full font-medium">富邦</button>
+            <button onclick="filterBroker('國泰')" id="btn-國泰" class="broker-btn bg-gray-800 text-gray-300 px-4 py-2 rounded-full font-medium">國泰</button>
+            <button onclick="filterBroker('中信')" id="btn-中信" class="broker-btn bg-gray-800 text-gray-300 px-4 py-2 rounded-full font-medium">中信</button>
         </div>
 
         <!-- 持股明細列表 -->
@@ -97,8 +96,8 @@ HTML
             });
         }
 
-        // 匯入 Excel 內的真實持股資料
-        let stockData = JSON.parse(localStorage.getItem('stocks')) || [
+        // 包含完整股票代碼與細項的原始 Excel 數據
+        let rawStockData = JSON.parse(localStorage.getItem('stocks')) || [
             { id: 1, name: '台積電', code: '2330', shares: 1000, price: 2500, broker: '證金', isPledged: true, pledgeAmount: 950000 },
             { id: 2, name: '國泰費城半導體', code: '00830', shares: 28000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 759000 },
             { id: 3, name: '台灣元大50', code: '0050', shares: 8000, price: 112.8, broker: '證金', isPledged: true, pledgeAmount: 350000 },
@@ -143,7 +142,6 @@ HTML
             { id: 42, name: '複委託 (美股現值)', code: 'US_STOCK2', shares: 1, price: 32905, broker: '富邦', isPledged: false, pledgeAmount: 0 }
         ];
 
-        // 匯入 Excel 內的負債資料
         let liabilityData = JSON.parse(localStorage.getItem('liabilities')) || [
             { name: '房屋貸款 A', amount: 10693781, rate: 2.15 },
             { name: '房屋貸款 B', amount: 6893440, rate: 2.15 },
@@ -163,40 +161,110 @@ HTML
             const listEl = document.getElementById('stock-list');
             listEl.innerHTML = '';
 
-            let totalVal = 0;
-            let totalPledge = 0;
-            let pledgedStockVal = 0;
+            // 更新按鈕樣式
+            document.querySelectorAll('.broker-btn').forEach(btn => {
+                btn.className = "broker-btn bg-gray-800 text-gray-300 px-4 py-2 rounded-full font-medium";
+            });
+            const activeBtn = document.getElementById(`btn-${activeBroker}`);
+            if (activeBtn) activeBtn.className = "broker-btn bg-blue-600 text-white px-4 py-2 rounded-full font-medium";
 
-            const filtered = activeBroker === '全部' ? stockData : stockData.filter(s => s.broker === activeBroker);
+            let grandTotalVal = 0;
+            let grandTotalPledge = 0;
+            let grandPledgedStockVal = 0;
 
-            filtered.forEach(s => {
-                const marketVal = s.shares * s.price;
-                totalVal += marketVal;
-                
-                let maintenanceRate = 0;
+            // 1. 計算頂部總市值與質押
+            rawStockData.forEach(s => {
+                const mv = s.shares * s.price;
+                grandTotalVal += mv;
                 if (s.isPledged && s.pledgeAmount > 0) {
-                    totalPledge += s.pledgeAmount;
-                    pledgedStockVal += marketVal;
-                    maintenanceRate = ((marketVal / s.pledgeAmount) * 100).toFixed(1);
+                    grandTotalPledge += s.pledgeAmount;
+                    grandPledgedStockVal += mv;
                 }
-
-                listEl.innerHTML += `
-                    <div class="bg-gray-800 border border-gray-700/60 rounded-xl p-4 flex justify-between items-center">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-base">${s.name}</span>
-                                <span class="text-[10px] bg-gray-700 text-gray-300 px-1.5 py-0.5 rounded">${s.broker}</span>
-                            </div>
-                            <p class="text-xs text-gray-400 mt-1">${s.shares.toLocaleString()} 股 | 現價: $${s.price.toLocaleString()}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="font-bold text-sm">NT$ ${Math.round(marketVal).toLocaleString()}</p>
-                            ${s.isPledged ? `<p class="text-xs ${maintenanceRate < 160 ? 'text-red-400 font-bold' : 'text-orange-400'}">維持率: ${maintenanceRate}%</p>` : ''}
-                        </div>
-                    </div>
-                `;
             });
 
+            // 2. 判斷是「全部總覽」還是「單一券商細項」
+            if (activeBroker === '全部') {
+                // 歸納合併模式 (Group by Code / Name)
+                const aggregated = {};
+                rawStockData.forEach(s => {
+                    const key = s.code + '_' + s.name;
+                    if (!aggregated[key]) {
+                        aggregated[key] = {
+                            code: s.code,
+                            name: s.name,
+                            totalShares: 0,
+                            price: s.price,
+                            totalPledge: 0,
+                            pledgedShares: 0,
+                            brokers: new Set()
+                        };
+                    }
+                    aggregated[key].totalShares += s.shares;
+                    aggregated[key].brokers.add(s.broker);
+                    if (s.isPledged) {
+                        aggregated[key].totalPledge += s.pledgeAmount;
+                        aggregated[key].pledgedShares += s.shares;
+                    }
+                });
+
+                Object.values(aggregated).forEach(item => {
+                    const totalMV = item.totalShares * item.price;
+                    const brokerList = Array.from(item.brokers).join(', ');
+                    let mRateText = '';
+                    if (item.totalPledge > 0) {
+                        const pledgedMV = item.pledgedShares * item.price;
+                        const mRate = ((pledgedMV / item.totalPledge) * 100).toFixed(1);
+                        mRateText = `<p class="text-xs ${mRate < 160 ? 'text-red-400 font-bold' : 'text-orange-400'}">總維持率: ${mRate}% (質押 $${item.totalPledge.toLocaleString()})</p>`;
+                    }
+
+                    listEl.innerHTML += `
+                        <div class="bg-gray-800 border border-gray-700/60 rounded-xl p-4 flex justify-between items-center">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-base">${item.name}</span>
+                                    <span class="text-xs text-blue-400 font-mono">(${item.code})</span>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1">跨券商: <span class="text-gray-200">${brokerList}</span></p>
+                                <p class="text-xs text-gray-300 mt-0.5">總持股: <strong class="text-white">${item.totalShares.toLocaleString()}</strong> 股 | 現價: $${item.price.toLocaleString()}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold text-sm text-blue-300">NT$ ${Math.round(totalMV).toLocaleString()}</p>
+                                ${mRateText}
+                            </div>
+                        </div>
+                    `;
+                });
+
+            } else {
+                // 單一券商細項模式
+                const filtered = rawStockData.filter(s => s.broker === activeBroker);
+                filtered.forEach(s => {
+                    const marketVal = s.shares * s.price;
+                    let mRateText = '';
+                    if (s.isPledged && s.pledgeAmount > 0) {
+                        const mRate = ((marketVal / s.pledgeAmount) * 100).toFixed(1);
+                        mRateText = `<p class="text-xs ${mRate < 160 ? 'text-red-400 font-bold' : 'text-orange-400'}">單筆維持率: ${mRate}%</p>`;
+                    }
+
+                    listEl.innerHTML += `
+                        <div class="bg-gray-800 border border-gray-700/60 rounded-xl p-4 flex justify-between items-center">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-base">${s.name}</span>
+                                    <span class="text-xs text-blue-400 font-mono">(${s.code})</span>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1">${s.shares.toLocaleString()} 股 | 現價: $${s.price.toLocaleString()}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold text-sm">NT$ ${Math.round(marketVal).toLocaleString()}</p>
+                                ${mRateText}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            // 負債試算
             let totalInterest = 0;
             const liabEl = document.getElementById('liability-list');
             liabEl.innerHTML = '';
@@ -211,11 +279,11 @@ HTML
                 `;
             });
 
-            document.getElementById('total-stock-val').innerText = 'NT$ ' + Math.round(totalVal).toLocaleString();
-            document.getElementById('total-pledge-val').innerText = 'NT$ ' + Math.round(totalPledge).toLocaleString();
+            document.getElementById('total-stock-val').innerText = 'NT$ ' + Math.round(grandTotalVal).toLocaleString();
+            document.getElementById('total-pledge-val').innerText = 'NT$ ' + Math.round(grandTotalPledge).toLocaleString();
             document.getElementById('total-monthly-interest').innerText = 'NT$ ' + Math.round(totalInterest).toLocaleString();
 
-            const overallRate = totalPledge > 0 ? ((pledgedStockVal / totalPledge) * 100).toFixed(1) : 0;
+            const overallRate = grandTotalPledge > 0 ? ((grandPledgedStockVal / grandTotalPledge) * 100).toFixed(1) : 0;
             const rateEl = document.getElementById('total-maintenance-rate');
             rateEl.innerText = overallRate + '%';
             rateEl.className = `text-2xl font-black ${overallRate < 160 ? 'text-red-500' : 'text-green-400'}`;
@@ -227,7 +295,7 @@ HTML
         }
 
         function exportBackup() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ stocks: stockData, liabilities: liabilityData }));
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ stocks: rawStockData, liabilities: liabilityData }));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
             downloadAnchor.setAttribute("download", "資產防禦塔_離線備份.json");
