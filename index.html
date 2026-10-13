@@ -16,7 +16,7 @@
 </head>
 <body class="bg-gray-900 text-white min-h-screen pb-12">
 
-    <!-- 1. 解鎖防護遮罩 -->
+    <!-- 解鎖防護遮罩 -->
     <div id="auth-screen" class="fixed inset-0 z-50 bg-gray-900 flex flex-col items-center justify-center p-6">
         <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-blue-500/50">
             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457-.39-2.823-1.07-4"></path></svg>
@@ -26,14 +26,14 @@
         <button id="unlock-btn" type="button" class="w-full max-w-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl shadow-lg transition active:scale-95">解鎖進入</button>
     </div>
 
-    <!-- 2. App 主要內容區 -->
+    <!-- App 主要內容區 -->
     <div id="app-content" class="hidden max-w-lg mx-auto p-4">
         
         <!-- 頂部總覽資產卡片 -->
         <div class="bg-gradient-to-br from-blue-700 to-indigo-900 rounded-2xl p-5 shadow-xl mb-6">
             <div class="flex justify-between items-center">
                 <span class="text-xs text-blue-200">總資產與質押概況</span>
-                <button id="reset-btn" type="button" class="text-[10px] bg-red-500/30 text-red-200 border border-red-500/40 px-2 py-0.5 rounded-full">重設快取資料</button>
+                <button id="reset-btn" type="button" class="text-[10px] bg-red-500/30 text-red-200 border border-red-500/40 px-2 py-0.5 rounded-full">重設預設資料</button>
             </div>
             <div class="flex justify-between items-baseline mt-2">
                 <div>
@@ -51,21 +51,22 @@
             </div>
         </div>
 
-        <!-- 截圖上傳與備份區 -->
+        <!-- 截圖上傳與手動新增區 -->
         <div class="bg-gray-800 rounded-xl p-4 mb-6 shadow-md border border-gray-700 space-y-3">
             <p class="text-sm font-semibold flex items-center justify-between">
-                <span>📸 截圖 OCR 與資料管理</span>
+                <span>📸 資料維護與對帳單解析</span>
+                <button onclick="openEditModal(-1)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-2.5 py-1 rounded-lg font-medium">+ 新增持股</button>
             </p>
             <input type="file" id="screenshot-input" accept="image/*" class="hidden" onchange="processScreenshot(event)">
             <div class="grid grid-cols-2 gap-2">
                 <button onclick="document.getElementById('screenshot-input').click()" class="bg-gray-700 hover:bg-gray-600 text-blue-400 border border-dashed border-blue-500/50 py-2.5 rounded-lg text-xs font-medium transition flex items-center justify-center gap-1">
-                    上傳對帳單截圖
+                    上傳對帳單截圖辨識
                 </button>
                 <button onclick="exportBackup()" class="bg-gray-700 hover:bg-gray-600 text-green-400 border border-gray-600 py-2.5 rounded-lg text-xs font-medium transition">
-                    匯出離線備份 JSON
+                    匯出 JSON 備份
                 </button>
             </div>
-            <div id="ocr-status" class="text-xs text-yellow-400 hidden">正在掃描截圖內容...</div>
+            <div id="ocr-status" class="text-xs text-yellow-400 hidden">正在讀取圖像並辨識數字，請稍候...</div>
         </div>
 
         <!-- 券商篩選分頁 -->
@@ -87,50 +88,102 @@
         </div>
     </div>
 
+    <!-- 編輯 / 新增持股 Modal 彈窗 -->
+    <div id="edit-modal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-sm p-5 space-y-3">
+            <h3 id="modal-title" class="font-bold text-base text-white">新增 / 編輯持股資料</h3>
+            <input type="hidden" id="edit-index" value="-1">
+            <div>
+                <label class="text-xs text-gray-400">股票名稱</label>
+                <input type="text" id="edit-name" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="如：台積電">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="text-xs text-gray-400">股票代碼</label>
+                    <input type="text" id="edit-code" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="如：2330">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400">所屬券商</label>
+                    <select id="edit-broker" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                        <option value="證金">證金</option>
+                        <option value="富邦">富邦</option>
+                        <option value="國泰">國泰</option>
+                        <option value="中信">中信</option>
+                    </select>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="text-xs text-gray-400">持有股數</label>
+                    <input type="number" id="edit-shares" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="股數">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400">一股價格 (NT$)</label>
+                    <input type="number" step="0.01" id="edit-price" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="現價">
+                </div>
+            </div>
+            <div class="pt-1">
+                <label class="flex items-center gap-2 text-xs text-gray-300">
+                    <input type="checkbox" id="edit-isPledged" onchange="document.getElementById('pledge-amount-box').classList.toggle('hidden', !this.checked)" class="rounded bg-gray-900 border-gray-700 text-blue-600 focus:ring-0">
+                    設定為股票質押項目
+                </label>
+            </div>
+            <div id="pledge-amount-box" class="hidden">
+                <label class="text-xs text-gray-400">質押借款總金額 (NT$)</label>
+                <input type="number" id="edit-pledgeAmount" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="借款金額">
+            </div>
+            <div class="flex gap-2 pt-3">
+                <button type="button" onclick="closeEditModal()" class="w-1/2 bg-gray-700 text-gray-300 py-2.5 rounded-lg text-xs font-semibold">取消</button>
+                <button type="button" onclick="saveStockData()" class="w-1/2 bg-blue-600 text-white py-2.5 rounded-lg text-xs font-semibold">儲存變更</button>
+            </div>
+            <button id="delete-btn" type="button" onclick="deleteStockData()" class="w-full bg-red-950 text-red-400 border border-red-800/50 py-2 rounded-lg text-xs font-medium hidden">刪除此筆股票</button>
+        </div>
+    </div>
+
     <script>
-        const initialStocks = [
-            { name: '台積電', code: '2330', shares: 1000, price: 2500, broker: '證金', isPledged: true, pledgeAmount: 950000 },
-            { name: '國泰費城半導體', code: '00830', shares: 28000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 759000 },
-            { name: '台灣元大50', code: '0050', shares: 8000, price: 112.8, broker: '證金', isPledged: true, pledgeAmount: 350000 },
-            { name: '復華SP500', code: '00924', shares: 20000, price: 34.01, broker: '證金', isPledged: true, pledgeAmount: 280000 },
-            { name: '國泰費城半導體', code: '00830', shares: 5000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 250000 },
-            { name: '台灣元大50', code: '0050', shares: 6000, price: 112.8, broker: '證金', isPledged: true, pledgeAmount: 150000 },
-            { name: '復華SP500', code: '00924', shares: 10000, price: 34.01, broker: '證金', isPledged: true, pledgeAmount: 130000 },
-            { name: '富邦科技', code: '0052', shares: 4000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 100000 },
-            { name: '富邦科技', code: '0052', shares: 4000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 100000 },
-            { name: '國泰費城半導體', code: '00830', shares: 3000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 90000 },
-            { name: '國泰費城半導體', code: '00830', shares: 3000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 90000 },
-            { name: '富邦科技', code: '0052', shares: 3000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 90000 },
-            { name: '主動復華未來50', code: '00981A', shares: 10000, price: 18.69, broker: '證金', isPledged: true, pledgeAmount: 80000 },
-            { name: '主動復華未來50', code: '00981A', shares: 8000, price: 18.69, broker: '證金', isPledged: true, pledgeAmount: 80000 },
-            { name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 80000 },
-            { name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 80000 },
-            { name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 80000 },
-            { name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 70000 },
-            { name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 70000 },
-            { name: '台灣元大50', code: '0050', shares: 1000, price: 112.8, broker: '證金', isPledged: true, pledgeAmount: 48000 },
-            { name: '富邦科技', code: '0052', shares: 1000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 28000 },
-            { name: '主動復華未來50', code: '00981A', shares: 2000, price: 18.69, broker: '證金', isPledged: true, pledgeAmount: 17000 },
-            { name: '奔騰', code: 'BT', shares: 1, price: 14387, broker: '證金', isPledged: true, pledgeAmount: 10000 },
-            { name: '元大台灣50正二', code: '00631L', shares: 56000, price: 39.58, broker: '國泰', isPledged: false, pledgeAmount: 0 },
-            { name: '主動復華未來50', code: '00981A', shares: 20000, price: 18.69, broker: '國泰', isPledged: false, pledgeAmount: 0 },
-            { name: '主動群益科技創新', code: '00992A', shares: 7000, price: 19.4, broker: '國泰', isPledged: false, pledgeAmount: 0 },
-            { name: '主動統一台股增長', code: '00988A', shares: 6000, price: 31.44, broker: '國泰', isPledged: false, pledgeAmount: 0 },
-            { name: '主動復華金融股息', code: '00982A', shares: 6000, price: 15.95, broker: '國泰', isPledged: false, pledgeAmount: 0 },
-            { name: '國泰費城半導體', code: '00830', shares: 4150, price: 91.25, broker: '國泰', isPledged: false, pledgeAmount: 0 },
-            { name: '富邦NASDAQ100', code: '00662', shares: 4000, price: 125.6, broker: '富邦', isPledged: false, pledgeAmount: 0 },
-            { name: '統一FANG+', code: '00757', shares: 1020, price: 144.1, broker: '國泰', isPledged: false, pledgeAmount: 0 },
-            { name: '主動統一升級', code: '00989A', shares: 1000, price: 9.74, broker: '國泰', isPledged: false, pledgeAmount: 0 },
-            { name: '台積電', code: '2330', shares: 790, price: 2500, broker: '國泰', isPledged: false, pledgeAmount: 0 },
-            { name: '金居', code: '8358', shares: 100, price: 519, broker: '富邦', isPledged: false, pledgeAmount: 0 },
-            { name: '複委託 (美股現值)', code: 'US_STOCK', shares: 1, price: 20320, broker: '富邦', isPledged: false, pledgeAmount: 0 },
-            { name: '台灣元大50', code: '0050', shares: 1000, price: 112.8, broker: '證金', isPledged: false, pledgeAmount: 0 },
-            { name: '國泰費城半導體', code: '00830', shares: 1000, price: 91.25, broker: '富邦', isPledged: false, pledgeAmount: 0 },
-            { name: '台積電', code: '2330', shares: 12, price: 2500, broker: '中信', isPledged: false, pledgeAmount: 0 },
-            { name: '台積電', code: '2330', shares: 2827, price: 2500, broker: '富邦', isPledged: false, pledgeAmount: 0 },
-            { name: '元大台灣50正二', code: '00631L', shares: 23000, price: 39.58, broker: '富邦', isPledged: false, pledgeAmount: 0 },
-            { name: '復華SP500', code: '00924', shares: 100, price: 34.01, broker: '富邦', isPledged: false, pledgeAmount: 0 },
-            { name: '複委託 (美股現值)', code: 'US_STOCK2', shares: 1, price: 32905, broker: '富邦', isPledged: false, pledgeAmount: 0 }
+        const defaultStocks = [
+            { id: 1, name: '台積電', code: '2330', shares: 1000, price: 2500, broker: '證金', isPledged: true, pledgeAmount: 950000 },
+            { id: 2, name: '國泰費城半導體', code: '00830', shares: 28000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 759000 },
+            { id: 3, name: '台灣元大50', code: '0050', shares: 8000, price: 112.8, broker: '證金', isPledged: true, pledgeAmount: 350000 },
+            { id: 4, name: '復華SP500', code: '00924', shares: 20000, price: 34.01, broker: '證金', isPledged: true, pledgeAmount: 280000 },
+            { id: 5, name: '國泰費城半導體', code: '00830', shares: 5000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 250000 },
+            { id: 6, name: '台灣元大50', code: '0050', shares: 6000, price: 112.8, broker: '證金', isPledged: true, pledgeAmount: 150000 },
+            { id: 7, name: '復華SP500', code: '00924', shares: 10000, price: 34.01, broker: '證金', isPledged: true, pledgeAmount: 130000 },
+            { id: 8, name: '富邦科技', code: '0052', shares: 4000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 100000 },
+            { id: 9, name: '富邦科技', code: '0052', shares: 4000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 100000 },
+            { id: 10, name: '國泰費城半導體', code: '00830', shares: 3000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 90000 },
+            { id: 11, name: '國泰費城半導體', code: '00830', shares: 3000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 90000 },
+            { id: 12, name: '富邦科技', code: '0052', shares: 3000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 90000 },
+            { id: 13, name: '主動復華未來50', code: '00981A', shares: 10000, price: 18.69, broker: '證金', isPledged: true, pledgeAmount: 80000 },
+            { id: 14, name: '主動復華未來50', code: '00981A', shares: 8000, price: 18.69, broker: '證金', isPledged: true, pledgeAmount: 80000 },
+            { id: 15, name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 80000 },
+            { id: 16, name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 80000 },
+            { id: 17, name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 80000 },
+            { id: 18, name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 70000 },
+            { id: 19, name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 70000 },
+            { id: 20, name: '台灣元大50', code: '0050', shares: 1000, price: 112.8, broker: '證金', isPledged: true, pledgeAmount: 48000 },
+            { id: 21, name: '富邦科技', code: '0052', shares: 1000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 28000 },
+            { id: 22, name: '主動復華未來50', code: '00981A', shares: 2000, price: 18.69, broker: '證金', isPledged: true, pledgeAmount: 17000 },
+            { id: 23, name: '奔騰', code: 'BT', shares: 1, price: 14387, broker: '證金', isPledged: true, pledgeAmount: 10000 },
+            { id: 24, name: '元大台灣50正二', code: '00631L', shares: 56000, price: 39.58, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 25, name: '主動復華未來50', code: '00981A', shares: 20000, price: 18.69, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 26, name: '主動群益科技創新', code: '00992A', shares: 7000, price: 19.4, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 27, name: '主動統一台股增長', code: '00988A', shares: 6000, price: 31.44, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 28, name: '主動復華金融股息', code: '00982A', shares: 6000, price: 15.95, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 29, name: '國泰費城半導體', code: '00830', shares: 4150, price: 91.25, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 30, name: '富邦NASDAQ100', code: '00662', shares: 4000, price: 125.6, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { id: 31, name: '統一FANG+', code: '00757', shares: 1020, price: 144.1, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 32, name: '主動統一升級', code: '00989A', shares: 1000, price: 9.74, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 33, name: '台積電', code: '2330', shares: 790, price: 2500, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 34, name: '金居', code: '8358', shares: 100, price: 519, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { id: 35, name: '複委託 (美股現值)', code: 'US_STOCK', shares: 1, price: 20320, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { id: 36, name: '台灣元大50', code: '0050', shares: 1000, price: 112.8, broker: '證金', isPledged: false, pledgeAmount: 0 },
+            { id: 37, name: '國泰費城半導體', code: '00830', shares: 1000, price: 91.25, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { id: 38, name: '台積電', code: '2330', shares: 12, price: 2500, broker: '中信', isPledged: false, pledgeAmount: 0 },
+            { id: 39, name: '台積電', code: '2330', shares: 2827, price: 2500, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { id: 40, name: '元大台灣50正二', code: '00631L', shares: 23000, price: 39.58, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { id: 41, name: '復華SP500', code: '00924', shares: 100, price: 34.01, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { id: 42, name: '複委託 (美股現值)', code: 'US_STOCK2', shares: 1, price: 32905, broker: '富邦', isPledged: false, pledgeAmount: 0 }
         ];
 
         let liabilityData = [
@@ -140,7 +193,7 @@
             { name: '學長借款', amount: 8800000, rate: 0.0 }
         ];
 
-        let rawStockData = initialStocks;
+        let rawStockData = JSON.parse(localStorage.getItem('stocks_user_v1')) || defaultStocks;
         let activeBroker = '全部';
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -159,11 +212,89 @@
 
             if (resetBtn) {
                 resetBtn.addEventListener('click', () => {
-                    localStorage.clear();
-                    location.reload();
+                    if (confirm("確定要重設回 Excel 的原始預設資料嗎？")) {
+                        localStorage.removeItem('stocks_user_v1');
+                        rawStockData = defaultStocks;
+                        render();
+                    }
                 });
             }
         });
+
+        function saveToStorage() {
+            localStorage.setItem('stocks_user_v1', JSON.stringify(rawStockData));
+            render();
+        }
+
+        function openEditModal(index) {
+            document.getElementById('edit-modal').classList.remove('hidden');
+            document.getElementById('edit-index').value = index;
+
+            if (index >= 0) {
+                const s = rawStockData[index];
+                document.getElementById('modal-title').innerText = "✏️ 編輯持股資料";
+                document.getElementById('edit-name').value = s.name;
+                document.getElementById('edit-code').value = s.code;
+                document.getElementById('edit-broker').value = s.broker;
+                document.getElementById('edit-shares').value = s.shares;
+                document.getElementById('edit-price').value = s.price;
+                document.getElementById('edit-isPledged').checked = s.isPledged;
+                document.getElementById('edit-pledgeAmount').value = s.pledgeAmount || 0;
+                document.getElementById('pledge-amount-box').classList.toggle('hidden', !s.isPledged);
+                document.getElementById('delete-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('modal-title').innerText = "➕ 新增股票 / 質押資料";
+                document.getElementById('edit-name').value = '';
+                document.getElementById('edit-code').value = '';
+                document.getElementById('edit-broker').value = '證金';
+                document.getElementById('edit-shares').value = '';
+                document.getElementById('edit-price').value = '';
+                document.getElementById('edit-isPledged').checked = false;
+                document.getElementById('edit-pledgeAmount').value = 0;
+                document.getElementById('pledge-amount-box').classList.add('hidden');
+                document.getElementById('delete-btn').classList.add('hidden');
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+        }
+
+        function saveStockData() {
+            const idx = parseInt(document.getElementById('edit-index').value);
+            const name = document.getElementById('edit-name').value.trim();
+            const code = document.getElementById('edit-code').value.trim();
+            const broker = document.getElementById('edit-broker').value;
+            const shares = parseFloat(document.getElementById('edit-shares').value) || 0;
+            const price = parseFloat(document.getElementById('edit-price').value) || 0;
+            const isPledged = document.getElementById('edit-isPledged').checked;
+            const pledgeAmount = isPledged ? (parseFloat(document.getElementById('edit-pledgeAmount').value) || 0) : 0;
+
+            if (!name || shares <= 0 || price <= 0) {
+                alert("請填寫正確的股票名稱、股數與價格！");
+                return;
+            }
+
+            const itemData = { id: Date.now(), name, code, shares, price, broker, isPledged, pledgeAmount };
+
+            if (idx >= 0) {
+                rawStockData[idx] = itemData;
+            } else {
+                rawStockData.push(itemData);
+            }
+
+            saveToStorage();
+            closeEditModal();
+        }
+
+        function deleteStockData() {
+            const idx = parseInt(document.getElementById('edit-index').value);
+            if (idx >= 0 && confirm("確定要刪除這筆持股資料嗎？")) {
+                rawStockData.splice(idx, 1);
+                saveToStorage();
+                closeEditModal();
+            }
+        }
 
         function toggleDetail(cardId) {
             const detailEl = document.getElementById(cardId);
@@ -183,7 +314,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ stocks: rawStockData, liabilities: liabilityData }));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", "資產防禦塔_離線備份.json");
+            downloadAnchor.setAttribute("download", "資產防禦塔_備份.json");
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
@@ -194,15 +325,32 @@
             if (!file) return;
             const statusEl = document.getElementById('ocr-status');
             statusEl.classList.remove('hidden');
+
             try {
                 const worker = await Tesseract.createWorker('chi_tra');
                 const ret = await worker.recognize(file);
                 await worker.terminate();
                 statusEl.classList.add('hidden');
-                alert("掃描完成！分析結果已儲存。");
+
+                const text = ret.data.text;
+                console.log("OCR 辨識結果:", text);
+
+                // 智慧匹配股票代碼與股數現價
+                const codeMatch = text.match(/(2330|00830|0050|00924|0052|00981A|00631L|00992A|00988A|00982A|00662|00757|00989A|8358)/i);
+                const numbersMatch = text.match(/\d{1,3}(,\d{3})+|\d+/g);
+
+                if (codeMatch) {
+                    const matchedCode = codeMatch[0];
+                    alert(`📸 辨識成功！偵測到股票代碼：${matchedCode}\n請在隨後彈出的視窗確認並校正股數與現價。`);
+                    openEditModal(-1);
+                    document.getElementById('edit-code').value = matchedCode;
+                } else {
+                    alert("📸 圖檔已辨識完畢！由於各券商格式不一，已為您打開新增視窗，請確認數字輸入。");
+                    openEditModal(-1);
+                }
             } catch (err) {
                 statusEl.classList.add('hidden');
-                alert("圖片解析失敗，請確認圖片格式是否清晰並重新嘗試！");
+                alert("圖片讀取失敗，請確認圖片格式是否清晰！");
             }
         }
 
@@ -231,7 +379,7 @@
 
             if (activeBroker === '全部') {
                 const aggregated = {};
-                rawStockData.forEach((s) => {
+                rawStockData.forEach((s, originalIndex) => {
                     const key = s.code + '_' + s.name;
                     if (!aggregated[key]) {
                         aggregated[key] = {
@@ -245,7 +393,7 @@
                         };
                     }
                     aggregated[key].totalShares += s.shares;
-                    aggregated[key].details.push(s);
+                    aggregated[key].details.push({ ...s, originalIndex });
                     if (s.isPledged) {
                         aggregated[key].totalPledge += s.pledgeAmount;
                         aggregated[key].pledgedShares += s.shares;
@@ -269,16 +417,19 @@
                         let subRateText = '';
                         if (d.isPledged && d.pledgeAmount > 0) {
                             const subRate = ((subMV / d.pledgeAmount) * 100).toFixed(1);
-                            subRateText = ` | 維持率: ${subRate}% (借 $${d.pledgeAmount.toLocaleString()})`;
+                            subRateText = ` | 維持率: ${subRate}%`;
                         }
                         detailRowsHtml += `
-                            <div class="flex justify-between items-center py-1.5 border-b border-gray-700/40 text-xs text-gray-300">
+                            <div class="flex justify-between items-center py-2 border-b border-gray-700/40 text-xs text-gray-300">
                                 <div>
                                     <span class="bg-gray-700 text-blue-300 px-1.5 py-0.5 rounded text-[10px] mr-1.5">${d.broker}</span>
                                     <span>${d.shares.toLocaleString()} 股</span>
                                     <span class="text-gray-400 text-[11px]">${subRateText}</span>
                                 </div>
-                                <div class="font-medium text-white">NT$ ${Math.round(subMV).toLocaleString()}</div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium text-white">NT$ ${Math.round(subMV).toLocaleString()}</span>
+                                    <button onclick="event.stopPropagation(); openEditModal(${d.originalIndex})" class="text-[10px] bg-gray-700 hover:bg-gray-600 text-blue-300 px-2 py-0.5 rounded">✏️ 編輯</button>
+                                </div>
                             </div>
                         `;
                     });
@@ -292,7 +443,7 @@
                                         <span class="text-xs text-blue-400 font-mono bg-blue-950 px-2 py-0.5 rounded border border-blue-800">${item.code}</span>
                                         <span id="${cardId}-icon" class="text-xs text-gray-400 ml-1">▼</span>
                                     </div>
-                                    <p class="text-[11px] text-blue-300 mt-1">點擊展開各券商分布明細 (${item.details.length} 筆)</p>
+                                    <p class="text-[11px] text-blue-300 mt-1">點擊展開各券商明細與編輯 (${item.details.length} 筆)</p>
                                 </div>
                                 <div class="text-right">
                                     <span class="text-[10px] text-gray-400">總市值</span>
@@ -308,7 +459,7 @@
                             </div>
                             
                             <div id="${cardId}" class="hidden mt-3 pt-2 border-t border-gray-700/80 bg-gray-900/50 -mx-4 -mb-4 p-4 rounded-b-xl space-y-1">
-                                <p class="text-[11px] font-semibold text-gray-400 mb-2">各券商持股拆解：</p>
+                                <p class="text-[11px] font-semibold text-gray-400 mb-2">各券商持股與編輯：</p>
                                 ${detailRowsHtml}
                             </div>
                         </div>
@@ -316,8 +467,8 @@
                 });
 
             } else {
-                const filtered = rawStockData.filter(s => s.broker === activeBroker);
-                filtered.forEach(s => {
+                rawStockData.forEach((s, originalIndex) => {
+                    if (s.broker !== activeBroker) return;
                     const marketVal = s.shares * s.price;
                     let mRateText = '';
                     if (s.isPledged && s.pledgeAmount > 0) {
@@ -336,7 +487,10 @@
                                     <p class="text-xs text-gray-400 mt-1">券商: <span class="text-gray-200">${s.broker}</span></p>
                                 </div>
                                 <div class="text-right">
-                                    <span class="text-[10px] text-gray-400">總金額</span>
+                                    <div class="flex items-center justify-end gap-2">
+                                        <span class="text-[10px] text-gray-400">總金額</span>
+                                        <button onclick="openEditModal(${originalIndex})" class="text-[10px] bg-gray-700 hover:bg-gray-600 text-blue-300 px-2 py-0.5 rounded">✏️ 編輯</button>
+                                    </div>
                                     <p class="font-black text-base text-blue-300">NT$ ${Math.round(marketVal).toLocaleString()}</p>
                                 </div>
                             </div>
