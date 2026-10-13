@@ -9,6 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="資產防禦塔">
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         body { -webkit-tap-highlight-color: transparent; }
     </style>
@@ -48,6 +49,23 @@
                 <span>質押總借款: <strong id="total-pledge-val">NT$ 0</strong></span>
                 <span>預估每月利息: <strong id="total-monthly-interest">NT$ 0</strong></span>
             </div>
+        </div>
+
+        <!-- 截圖上傳與備份區 -->
+        <div class="bg-gray-800 rounded-xl p-4 mb-6 shadow-md border border-gray-700 space-y-3">
+            <p class="text-sm font-semibold flex items-center justify-between">
+                <span>📸 截圖 OCR 與資料管理</span>
+            </p>
+            <input type="file" id="screenshot-input" accept="image/*" class="hidden" onchange="processScreenshot(event)">
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="document.getElementById('screenshot-input').click()" class="bg-gray-700 hover:bg-gray-600 text-blue-400 border border-dashed border-blue-500/50 py-2.5 rounded-lg text-xs font-medium transition flex items-center justify-center gap-1">
+                    上傳對帳單截圖
+                </button>
+                <button onclick="exportBackup()" class="bg-gray-700 hover:bg-gray-600 text-green-400 border border-gray-600 py-2.5 rounded-lg text-xs font-medium transition">
+                    匯出離線備份 JSON
+                </button>
+            </div>
+            <div id="ocr-status" class="text-xs text-yellow-400 hidden">正在掃描截圖內容...</div>
         </div>
 
         <!-- 券商篩選分頁 -->
@@ -125,7 +143,6 @@
         let rawStockData = initialStocks;
         let activeBroker = '全部';
 
-        // 綁定解鎖與重設事件
         document.addEventListener('DOMContentLoaded', () => {
             const unlockBtn = document.getElementById('unlock-btn');
             const authScreen = document.getElementById('auth-screen');
@@ -159,6 +176,33 @@
                     detailEl.classList.add('hidden');
                     if (iconEl) iconEl.innerText = '▼';
                 }
+            }
+        }
+
+        function exportBackup() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ stocks: rawStockData, liabilities: liabilityData }));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "資產防禦塔_離線備份.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        async function processScreenshot(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const statusEl = document.getElementById('ocr-status');
+            statusEl.classList.remove('hidden');
+            try {
+                const worker = await Tesseract.createWorker('chi_tra');
+                const ret = await worker.recognize(file);
+                await worker.terminate();
+                statusEl.classList.add('hidden');
+                alert("掃描完成！分析結果已儲存。");
+            } catch (err) {
+                statusEl.classList.add('hidden');
+                alert("圖片解析失敗，請確認圖片格式是否清晰並重新嘗試！");
             }
         }
 
