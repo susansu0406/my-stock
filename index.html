@@ -225,9 +225,117 @@
                         let subRateText = '';
                         if (d.isPledged && d.pledgeAmount > 0) {
                             const subRate = ((subMV / d.pledgeAmount) * 100).toFixed(1);
-                            subRateText = ` | 維持率: ${subRate}\% (借 $${d.pledgeAmount.toLocaleString()})`;
+                            subRateText = ` | 維持率: ${subRate}% (借 $${d.pledgeAmount.toLocaleString()})`;
                         }
                         detailRowsHtml += `
                             <div class="flex justify-between items-center py-1.5 border-b border-gray-700/40 text-xs text-gray-300">
                                 <div>
-                                    <span class="bg-gray-700 text-blue-300 px-1.5 py-0.5 rounded text-[10px] mr-1.5">${d
+                                    <span class="bg-gray-700 text-blue-300 px-1.5 py-0.5 rounded text-[10px] mr-1.5">${d.broker}</span>
+                                    <span>${d.shares.toLocaleString()} 股</span>
+                                    <span class="text-gray-400 text-[11px]">${subRateText}</span>
+                                </div>
+                                <div class="font-medium text-white">NT$ ${Math.round(subMV).toLocaleString()}</div>
+                            </div>
+                        `;
+                    });
+
+                    listEl.innerHTML += `
+                        <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 cursor-pointer hover:border-blue-500/50 transition" onclick="toggleDetail('${cardId}')">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-base text-white">${item.name}</span>
+                                        <span class="text-xs text-blue-400 font-mono bg-blue-950 px-2 py-0.5 rounded border border-blue-800">${item.code}</span>
+                                        <span id="${cardId}-icon" class="text-xs text-gray-400 ml-1">▼</span>
+                                    </div>
+                                    <p class="text-[11px] text-blue-300 mt-1">點擊展開各券商分布明細 (${item.details.length} 筆)</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-[10px] text-gray-400">總市值</span>
+                                    <p class="font-black text-base text-blue-300">NT$ ${Math.round(totalMV).toLocaleString()}</p>
+                                </div>
+                            </div>
+                            <div class="border-t border-gray-700/60 pt-2 mt-2 flex justify-between items-center text-xs">
+                                <div class="text-gray-300">
+                                    <span>一股: <strong class="text-yellow-400">$${item.price.toLocaleString()}</strong></span>
+                                    <span class="ml-2">總股數: <strong class="text-white">${item.totalShares.toLocaleString()}</strong> 股</span>
+                                </div>
+                                <div>${mRateText}</div>
+                            </div>
+                            
+                            <div id="${cardId}" class="hidden mt-3 pt-2 border-t border-gray-700/80 bg-gray-900/50 -mx-4 -mb-4 p-4 rounded-b-xl space-y-1">
+                                <p class="text-[11px] font-semibold text-gray-400 mb-2">各券商持股拆解：</p>
+                                ${detailRowsHtml}
+                            </div>
+                        </div>
+                    `;
+                });
+
+            } else {
+                const filtered = rawStockData.filter(s => s.broker === activeBroker);
+                filtered.forEach(s => {
+                    const marketVal = s.shares * s.price;
+                    let mRateText = '';
+                    if (s.isPledged && s.pledgeAmount > 0) {
+                        const mRate = ((marketVal / s.pledgeAmount) * 100).toFixed(1);
+                        mRateText = `<span class="${mRate < 160 ? 'text-red-400 font-bold' : 'text-orange-400'}">維持率 ${mRate}%</span>`;
+                    }
+
+                    listEl.innerHTML += `
+                        <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 space-y-2">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-base text-white">${s.name}</span>
+                                        <span class="text-xs text-blue-400 font-mono bg-blue-950 px-2 py-0.5 rounded border border-blue-800">${s.code}</span>
+                                    </div>
+                                    <p class="text-xs text-gray-400 mt-1">券商: <span class="text-gray-200">${s.broker}</span></p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-[10px] text-gray-400">總金額</span>
+                                    <p class="font-black text-base text-blue-300">NT$ ${Math.round(marketVal).toLocaleString()}</p>
+                                </div>
+                            </div>
+                            <div class="border-t border-gray-700/60 pt-2 flex justify-between items-center text-xs">
+                                <div class="text-gray-300">
+                                    <span>一股: <strong class="text-yellow-400">$${s.price.toLocaleString()}</strong></span>
+                                    <span class="ml-2">股數: <strong class="text-white">${s.shares.toLocaleString()}</strong> 股</span>
+                                </div>
+                                <div>${mRateText}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            let totalInterest = 0;
+            const liabEl = document.getElementById('liability-list');
+            liabEl.innerHTML = '';
+            liabilityData.forEach(l => {
+                const monthly = (l.amount * (l.rate / 100)) / 12;
+                totalInterest += monthly;
+                liabEl.innerHTML += `
+                    <div class="bg-gray-800/60 p-3 rounded-lg flex justify-between text-xs">
+                        <span>${l.name} (NT$ ${l.amount.toLocaleString()} | ${l.rate}%)</span>
+                        <span class="text-gray-300">預估月息 ≈ NT$ ${Math.round(monthly).toLocaleString()}</span>
+                    </div>
+                `;
+            });
+
+            document.getElementById('total-stock-val').innerText = 'NT$ ' + Math.round(grandTotalVal).toLocaleString();
+            document.getElementById('total-pledge-val').innerText = 'NT$ ' + Math.round(grandTotalPledge).toLocaleString();
+            document.getElementById('total-monthly-interest').innerText = 'NT$ ' + Math.round(totalInterest).toLocaleString();
+
+            const overallRate = grandTotalPledge > 0 ? ((grandPledgedStockVal / grandTotalPledge) * 100).toFixed(1) : 0;
+            const rateEl = document.getElementById('total-maintenance-rate');
+            rateEl.innerText = overallRate + '%';
+            rateEl.className = `text-2xl font-black ${overallRate < 160 ? 'text-red-500' : 'text-green-400'}`;
+        }
+
+        function filterBroker(broker) {
+            activeBroker = broker;
+            render();
+        }
+    </script>
+</body>
+</html>
