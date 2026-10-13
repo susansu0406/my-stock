@@ -16,18 +16,8 @@
 </head>
 <body class="bg-gray-900 text-white min-h-screen pb-20">
 
-    <!-- 解鎖畫面 -->
-    <div id="auth-screen" class="fixed inset-0 z-50 bg-gray-900 flex flex-col items-center justify-center p-6">
-        <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-blue-500/50">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457-.39-2.823-1.07-4"></path></svg>
-        </div>
-        <h2 class="text-xl font-bold mb-2">個人資產防禦塔</h2>
-        <p class="text-gray-400 text-sm mb-6">請驗證身份以進入儀表板</p>
-        <button id="unlock-btn" type="button" class="w-full max-w-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl shadow-lg transition">解鎖進入</button>
-    </div>
-
-    <!-- App 主內容 -->
-    <div id="app-content" class="hidden max-w-lg mx-auto p-4">
+    <!-- App 主內容 (直接顯示，無阻擋遮罩) -->
+    <div id="app-content" class="max-w-lg mx-auto p-4">
         
         <!-- 頂部頁面導覽列 -->
         <div class="flex justify-around border-b border-gray-800 mb-5 text-sm text-gray-400 bg-gray-900/90 sticky top-0 z-40 py-2">
@@ -42,7 +32,7 @@
             <div class="bg-gradient-to-br from-indigo-900 to-blue-900 rounded-2xl p-5 shadow-xl border border-indigo-700/50">
                 <div class="flex justify-between items-center">
                     <p class="text-xs text-indigo-300 font-medium">個人預估淨資產 (Net Worth)</p>
-                    <button onclick="forceResetCorrectData()" class="text-[10px] bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 px-2.5 py-1 rounded-full font-bold">⚡ 點此載入包含質押扣除數據</button>
+                    <button onclick="forceResetCorrectData()" class="text-[10px] bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 px-2.5 py-1 rounded-full font-bold">⚡ 點此同步校正數據</button>
                 </div>
                 <p id="net-worth-val" class="text-3xl font-black text-white mt-1">NT$ 0</p>
                 <p class="text-[11px] text-indigo-200 mt-2">公式：股票 (NT$ <span id="ov-stock-val">0</span>) ＋ 學長借款 (NT$ <span id="ov-asset-debt-val">0</span>) － 房信貸 (NT$ <span id="ov-debt-val">0</span>) － 質押借款 (NT$ <span id="ov-pledge-debt-val">0</span>)</p>
@@ -150,7 +140,6 @@
     </div>
 
     <script>
-        // 完整的 42 筆原始持股與質押數據
         const fullStockData = [
             { id: 1, name: '台積電', code: '2330', shares: 1000, price: 2500, broker: '證金', isPledged: true, pledgeAmount: 950000 },
             { id: 2, name: '國泰費城半導體', code: '00830', shares: 28000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 759000 },
@@ -209,41 +198,33 @@
             { id: 3, target: '國泰證券 - 00830 定期定額', amount: 10000, day: 26, bank: '交割戶' }
         ];
 
-        // 使用 v10 新 key 避免舊資料快取
-        let stocksData = JSON.parse(localStorage.getItem('v10_stocks')) || fullStockData;
-        let debtsData = JSON.parse(localStorage.getItem('v10_debts')) || correctDebts;
-        let rspData = JSON.parse(localStorage.getItem('v10_rsp')) || correctRsp;
+        let stocksData = JSON.parse(localStorage.getItem('v11_stocks')) || fullStockData;
+        let debtsData = JSON.parse(localStorage.getItem('v11_debts')) || correctDebts;
+        let rspData = JSON.parse(localStorage.getItem('v11_rsp')) || correctRsp;
 
         let activeBroker = '全部';
         let currentModalCategory = '';
         let currentModalIndex = -1;
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const unlockBtn = document.getElementById('unlock-btn');
-            if (unlockBtn) {
-                unlockBtn.addEventListener('click', () => {
-                    document.getElementById('auth-screen').classList.add('hidden');
-                    document.getElementById('app-content').classList.remove('hidden');
-                    renderAll();
-                });
-            }
-        });
+        window.onload = function() {
+            renderAll();
+        };
 
         function saveData() {
-            localStorage.setItem('v10_stocks', JSON.stringify(stocksData));
-            localStorage.setItem('v10_debts', JSON.stringify(debtsData));
-            localStorage.setItem('v10_rsp', JSON.stringify(rspData));
+            localStorage.setItem('v11_stocks', JSON.stringify(stocksData));
+            localStorage.setItem('v11_debts', JSON.stringify(debtsData));
+            localStorage.setItem('v11_rsp', JSON.stringify(rspData));
             renderAll();
         }
 
         function forceResetCorrectData() {
-            if (confirm("將重設為【包含 23 筆股票質押金額 (共扣除 ~342萬)】的完全精準淨資產數據，確定嗎？")) {
+            if (confirm("將重設為精準淨資產數據，確定嗎？")) {
                 localStorage.clear();
                 stocksData = fullStockData;
                 debtsData = correctDebts;
                 rspData = correctRsp;
                 saveData();
-                alert("✅ 資料已成功校正並扣除質押負債！");
+                alert("✅ 資料已成功同步重設！");
             }
         }
 
@@ -263,8 +244,8 @@
 
         function renderOverview() {
             let totalStockVal = 0;
-            let totalPledgeAmt = 0; // 質押借款金額 (負債)
-            let pledgedMV = 0;       // 質押擔保股票市值
+            let totalPledgeAmt = 0;
+            let pledgedMV = 0;
 
             stocksData.forEach(s => {
                 const mv = s.shares * s.price;
@@ -275,8 +256,8 @@
                 }
             });
 
-            let totalRealDebt = 0;   // 房信貸負債 (-)
-            let totalAssetDebt = 0;  // 學長借出款 (+)
+            let totalRealDebt = 0;
+            let totalAssetDebt = 0;
             let totalMonthlyInterest = 0;
 
             debtsData.forEach(d => {
@@ -291,7 +272,6 @@
             let totalRsp = 0;
             rspData.forEach(r => totalRsp += r.amount);
 
-            // 精確淨資產公式：股票總市值 + 學長借款 - 房信貸 - 股票質押借款
             const netWorth = totalStockVal + totalAssetDebt - totalRealDebt - totalPledgeAmt;
             const overallRate = totalPledgeAmt > 0 ? ((pledgedMV / totalPledgeAmt) * 100).toFixed(1) : 0;
 
@@ -396,7 +376,12 @@
                                 </div>
                                 <div class="text-right">
                                     <span class="text-[10px] text-gray-400">總市值</span>
-                                    <p class="font-black text-base text-blue-300">NT$ ${Math.round(totalMV).toLocaleString()}</p> </div> </div> <div class="border-t border-gray-700/60 pt-2 mt-2 flex justify-between items-center text-xs"> <div class="text-gray-300"> <span>現價: <strong class="text-yellow-400">$${item.price.toLocaleString()}</strong></span>
+                                    <p class="font-black text-base text-blue-300">NT$ ${Math.round(totalMV).toLocaleString()}</p>
+                                </div>
+                            </div>
+                            <div class="border-t border-gray-700/60 pt-2 mt-2 flex justify-between items-center text-xs">
+                                <div class="text-gray-300">
+                                    <span>現價: <strong class="text-yellow-400">$${item.price.toLocaleString()}</strong></span>
                                     <span class="ml-2">總股數: <strong class="text-white">${item.totalShares.toLocaleString()}</strong> 股</span>
                                 </div>
                                 <div>${mRateText}</div>
@@ -414,7 +399,7 @@
                 stocksData.forEach((s, originalIndex) => {
                     if (s.broker !== activeBroker) return;
                     const mv = s.shares * s.price;
-                    let rateHtml = s.isPledged ? `<p class="text-xs text-orange-400">質押借款: $${s.pledgeAmount.toLocaleString()} \vert{} 維持率: ${((mv/s.pledgeAmount)*100).toFixed(1)}%</p>` : '';
+                    let rateHtml = s.isPledged ? `<p class="text-xs text-orange-400">質押借款: $${s.pledgeAmount.toLocaleString()} | 維持率: ${((mv/s.pledgeAmount)*100).toFixed(1)}%</p>` : '';
                     listEl.innerHTML += `
                         <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex justify-between items-center">
                             <div>
@@ -423,7 +408,7 @@
                                     <span class="text-xs text-blue-400 font-mono">(${s.code})</span>
                                     <span class="bg-gray-700 text-gray-300 text-[10px] px-1.5 py-0.5 rounded">${s.broker}</span>
                                 </div>
-                                <p class="text-xs text-gray-400 mt-1">${s.shares.toLocaleString()} 股 \vert{} 現價: $${s.price}</p>
+                                <p class="text-xs text-gray-400 mt-1">${s.shares.toLocaleString()} 股 | 現價: $${s.price}</p>
                             </div>
                             <div class="text-right">
                                 <div class="flex items-center justify-end gap-2">
@@ -469,7 +454,8 @@
                         <div class="flex justify-between items-start">
                             <div>
                                 <div class="flex items-center gap-2">
-                                    <span class="font-bold text-sm text-white">${d.name}</span>${typeTag}
+                                    <span class="font-bold text-sm text-white">${d.name}</span>
+                                    ${typeTag}
                                 </div>
                                 <p class="text-xs text-gray-400 mt-1">機構/對象: ${d.bank || '個人'}</p>
                             </div>
@@ -477,7 +463,8 @@
                         </div>
                         <div class="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-gray-700/50">
                             <div><span class="text-gray-400">金額:</span> <strong class="${colorClass}">${sign} NT$ ${d.amount.toLocaleString()}</strong></div>
-                            <div><span class="text-gray-400">年利率:</span> <strong class="text-yellow-400">${d.rate}\%</strong></div>${!isAsset ? `<div class="col-span-2 text-gray-300">預估每月利息支出 ≈ <strong class="text-orange-400">NT$ ${Math.round(monthlyInterest).toLocaleString()}</strong></div>` : ''}
+                            <div><span class="text-gray-400">年利率:</span> <strong class="text-yellow-400">${d.rate}%</strong></div>
+                            ${!isAsset ? `<div class="col-span-2 text-gray-300">預估每月利息支出 ≈ <strong class="text-orange-400">NT$ ${Math.round(monthlyInterest).toLocaleString()}</strong></div>` : ''}
                         </div>
                     </div>
                 `;
@@ -492,7 +479,7 @@
                     <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex justify-between items-center text-xs">
                         <div>
                             <p class="font-bold text-sm text-white">${r.target}</p>
-                            <p class="text-gray-400 mt-1">每月 <strong class="text-yellow-400">${r.day} 號</strong> 扣款 \vert{} 帳戶: ${r.bank}</p>
+                            <p class="text-gray-400 mt-1">每月 <strong class="text-yellow-400">${r.day} 號</strong> 扣款 | 帳戶: ${r.bank}</p>
                         </div>
                         <div class="text-right">
                             <p class="font-bold text-blue-300 text-sm">NT$ ${r.amount.toLocaleString()}</p>
@@ -503,7 +490,6 @@
             });
         }
 
-        // 編輯 Modal
         function editDebtModal(idx) {
             currentModalCategory = 'debt';
             currentModalIndex = idx;
@@ -567,4 +553,72 @@
                 <div><label class="text-gray-400">扣款標的</label><input id="md-rsp-target" value="${data.target}" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white"></div>
                 <div><label class="text-gray-400">每期金額 (NT$)</label><input id="md-rsp-amount" type="number" value="${data.amount}" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white"></div>
                 <div><label class="text-gray-400">扣款日期 (幾號)</label><input id="md-rsp-day" type="number" value="${data.day}" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white"></div>
-                <div><label class="text-
+                <div><label class="text-gray-400">扣款帳戶</label><input id="md-rsp-bank" value="${data.bank}" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white"></div>
+            `;
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+        }
+
+        function saveModalData() {
+            if (currentModalCategory === 'debt') {
+                const item = {
+                    id: Date.now(),
+                    name: document.getElementById('md-debt-name').value,
+                    type: document.getElementById('md-debt-type').value,
+                    amount: parseFloat(document.getElementById('md-debt-amount').value) || 0,
+                    rate: parseFloat(document.getElementById('md-debt-rate').value) || 0,
+                    bank: document.getElementById('md-debt-bank').value
+                };
+                if (currentModalIndex >= 0) debtsData[currentModalIndex] = item;
+                else debtsData.push(item);
+
+            } else if (currentModalCategory === 'stock') {
+                const item = {
+                    id: Date.now(),
+                    name: document.getElementById('md-stock-name').value,
+                    code: document.getElementById('md-stock-code').value,
+                    shares: parseFloat(document.getElementById('md-stock-shares').value) || 0,
+                    price: parseFloat(document.getElementById('md-stock-price').value) || 0,
+                    broker: document.getElementById('md-stock-broker').value,
+                    isPledged: document.getElementById('md-stock-pledged').checked,
+                    pledgeAmount: parseFloat(document.getElementById('md-stock-pledge-amount').value) || 0
+                };
+                if (currentModalIndex >= 0) stocksData[currentModalIndex] = item;
+                else stocksData.push(item);
+
+            } else if (currentModalCategory === 'rsp') {
+                const item = {
+                    id: Date.now(),
+                    target: document.getElementById('md-rsp-target').value,
+                    amount: parseFloat(document.getElementById('md-rsp-amount').value) || 0,
+                    day: parseInt(document.getElementById('md-rsp-day').value) || 1,
+                    bank: document.getElementById('md-rsp-bank').value
+                };
+                if (currentModalIndex >= 0) rspData[currentModalIndex] = item;
+                else rspData.push(item);
+            }
+
+            saveData();
+            closeEditModal();
+        }
+
+        function deleteModalData() {
+            if (confirm("確定要刪除這筆資料嗎？")) {
+                if (currentModalCategory === 'debt' && currentModalIndex >= 0) debtsData.splice(currentModalIndex, 1);
+                if (currentModalCategory === 'stock' && currentModalIndex >= 0) stocksData.splice(currentModalIndex, 1);
+                if (currentModalCategory === 'rsp' && currentModalIndex >= 0) rspData.splice(currentModalIndex, 1);
+                saveData();
+                closeEditModal();
+            }
+        }
+
+        function filterBroker(broker) {
+            activeBroker = broker;
+            renderStocks();
+        }
+    </script>
+</body>
+</html>
