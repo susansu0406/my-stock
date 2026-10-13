@@ -5,7 +5,6 @@ HTML
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>個人資產防禦塔</title>
-    <!-- iOS PWA 支援設定 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="資產防禦塔">
@@ -43,13 +42,13 @@ HTML
                     <p id="total-stock-val" class="text-2xl font-black">NT$ 0</p>
                 </div>
                 <div class="text-right">
-                    <p class="text-xs text-blue-300">整體維持率</p>
+                    <p class="text-xs text-blue-300">整體質押維持率</p>
                     <p id="total-maintenance-rate" class="text-2xl font-black text-green-400">0%</p>
                 </div>
             </div>
             <div class="border-t border-blue-500/30 my-3 pt-2 flex justify-between text-xs text-blue-200">
                 <span>質押總借款: <strong id="total-pledge-val">NT$ 0</strong></span>
-                <span>每月預估利息: <strong id="total-monthly-interest">NT$ 0</strong></span>
+                <span>每月預估負債利息: <strong id="total-monthly-interest">NT$ 0</strong></span>
             </div>
         </div>
 
@@ -73,9 +72,10 @@ HTML
         <!-- 券商篩選分頁 -->
         <div class="flex gap-2 overflow-x-auto pb-2 mb-4 text-xs">
             <button onclick="filterBroker('全部')" class="broker-btn bg-blue-600 text-white px-4 py-2 rounded-full font-medium">全部</button>
-            <button onclick="filterBroker('國泰')" class="broker-btn bg-gray-800 text-gray-300 px-4 py-2 rounded-full font-medium">國泰</button>
-            <button onclick="filterBroker('富邦')" class="broker-btn bg-gray-800 text-gray-300 px-4 py-2 rounded-full font-medium">富邦</button>
             <button onclick="filterBroker('證金')" class="broker-btn bg-gray-800 text-gray-300 px-4 py-2 rounded-full font-medium">證金</button>
+            <button onclick="filterBroker('富邦')" class="broker-btn bg-gray-800 text-gray-300 px-4 py-2 rounded-full font-medium">富邦</button>
+            <button onclick="filterBroker('國泰')" class="broker-btn bg-gray-800 text-gray-300 px-4 py-2 rounded-full font-medium">國泰</button>
+            <button onclick="filterBroker('中信')" class="broker-btn bg-gray-800 text-gray-300 px-4 py-2 rounded-full font-medium">中信</button>
         </div>
 
         <!-- 持股明細列表 -->
@@ -83,7 +83,7 @@ HTML
 
         <!-- 負債與利息清單 -->
         <div class="mt-8">
-            <h3 class="text-sm font-bold text-gray-400 mb-3">負債與房貸/信貸利率</h3>
+            <h3 class="text-sm font-bold text-gray-400 mb-3">房貸 / 信貸 / 其他負債試算</h3>
             <div id="liability-list" class="space-y-2"></div>
         </div>
     </div>
@@ -97,14 +97,58 @@ HTML
             });
         }
 
+        // 匯入 Excel 內的真實持股資料
         let stockData = JSON.parse(localStorage.getItem('stocks')) || [
-            { id: 1, name: '台積電', code: '2330', shares: 1000, price: 950, broker: '證金', isPledged: true, pledgeAmount: 400000 },
-            { id: 2, name: '元大台灣50', code: '0050', shares: 5000, price: 170, broker: '國泰', isPledged: false, pledgeAmount: 0 }
+            { id: 1, name: '台積電', code: '2330', shares: 1000, price: 2500, broker: '證金', isPledged: true, pledgeAmount: 950000 },
+            { id: 2, name: '國泰費城半導體', code: '00830', shares: 28000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 759000 },
+            { id: 3, name: '台灣元大50', code: '0050', shares: 8000, price: 112.8, broker: '證金', isPledged: true, pledgeAmount: 350000 },
+            { id: 4, name: '復華SP500', code: '00924', shares: 20000, price: 34.01, broker: '證金', isPledged: true, pledgeAmount: 280000 },
+            { id: 5, name: '國泰費城半導體', code: '00830', shares: 5000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 250000 },
+            { id: 6, name: '台灣元大50', code: '0050', shares: 6000, price: 112.8, broker: '證金', isPledged: true, pledgeAmount: 150000 },
+            { id: 7, name: '復華SP500', code: '00924', shares: 10000, price: 34.01, broker: '證金', isPledged: true, pledgeAmount: 130000 },
+            { id: 8, name: '富邦科技', code: '0052', shares: 4000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 100000 },
+            { id: 9, name: '富邦科技', code: '0052', shares: 4000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 100000 },
+            { id: 10, name: '國泰費城半導體', code: '00830', shares: 3000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 90000 },
+            { id: 11, name: '國泰費城半導體', code: '00830', shares: 3000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 90000 },
+            { id: 12, name: '富邦科技', code: '0052', shares: 3000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 90000 },
+            { id: 13, name: '主動復華未來50', code: '00981A', shares: 10000, price: 18.69, broker: '證金', isPledged: true, pledgeAmount: 80000 },
+            { id: 14, name: '主動復華未來50', code: '00981A', shares: 8000, price: 18.69, broker: '證金', isPledged: true, pledgeAmount: 80000 },
+            { id: 15, name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 80000 },
+            { id: 16, name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 80000 },
+            { id: 17, name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 80000 },
+            { id: 18, name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 70000 },
+            { id: 19, name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 70000 },
+            { id: 20, name: '台灣元大50', code: '0050', shares: 1000, price: 112.8, broker: '證金', isPledged: true, pledgeAmount: 48000 },
+            { id: 21, name: '富邦科技', code: '0052', shares: 1000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 28000 },
+            { id: 22, name: '主動復華未來50', code: '00981A', shares: 2000, price: 18.69, broker: '證金', isPledged: true, pledgeAmount: 17000 },
+            { id: 23, name: '奔騰', code: 'BT', shares: 1, price: 14387, broker: '證金', isPledged: true, pledgeAmount: 10000 },
+            { id: 24, name: '元大台灣50正二', code: '00631L', shares: 56000, price: 39.58, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 25, name: '主動復華未來50', code: '00981A', shares: 20000, price: 18.69, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 26, name: '主動群益科技創新', code: '00992A', shares: 7000, price: 19.4, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 27, name: '主動統一台股增長', code: '00988A', shares: 6000, price: 31.44, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 28, name: '主動復華金融股息', code: '00982A', shares: 6000, price: 15.95, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 29, name: '國泰費城半導體', code: '00830', shares: 4150, price: 91.25, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 30, name: '富邦NASDAQ100', code: '00662', shares: 4000, price: 125.6, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { id: 31, name: '統一FANG+', code: '00757', shares: 1020, price: 144.1, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 32, name: '主動統一升級', code: '00989A', shares: 1000, price: 9.74, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 33, name: '台積電', code: '2330', shares: 790, price: 2500, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 34, name: '金居', code: '8358', shares: 100, price: 519, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { id: 35, name: '複委託 (美股現值)', code: 'US_STOCK', shares: 1, price: 20320, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { id: 36, name: '台灣元大50', code: '0050', shares: 1000, price: 112.8, broker: '證金', isPledged: false, pledgeAmount: 0 },
+            { id: 37, name: '國泰費城半導體', code: '00830', shares: 1000, price: 91.25, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { id: 38, name: '台積電', code: '2330', shares: 12, price: 2500, broker: '中信', isPledged: false, pledgeAmount: 0 },
+            { id: 39, name: '台積電', code: '2330', shares: 2827, price: 2500, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { id: 40, name: '元大台灣50正二', code: '00631L', shares: 23000, price: 39.58, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { id: 41, name: '復華SP500', code: '00924', shares: 100, price: 34.01, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { id: 42, name: '複委託 (美股現值)', code: 'US_STOCK2', shares: 1, price: 32905, broker: '富邦', isPledged: false, pledgeAmount: 0 }
         ];
 
+        // 匯入 Excel 內的負債資料
         let liabilityData = JSON.parse(localStorage.getItem('liabilities')) || [
-            { name: '房屋貸款', amount: 8000000, rate: 2.18 },
-            { name: '信用貸款', amount: 500000, rate: 3.2 }
+            { name: '房屋貸款 A', amount: 10693781, rate: 2.15 },
+            { name: '房屋貸款 B', amount: 6893440, rate: 2.15 },
+            { name: '信用貸款', amount: 4144071, rate: 2.88 },
+            { name: '學長借款', amount: 8800000, rate: 0.0 }
         ];
 
         let activeBroker = '全部';
@@ -143,10 +187,10 @@ HTML
                                 <span class="font-bold text-base">${s.name}</span>
                                 <span class="text-[10px] bg-gray-700 text-gray-300 px-1.5 py-0.5 rounded">${s.broker}</span>
                             </div>
-                            <p class="text-xs text-gray-400 mt-1">${s.shares.toLocaleString()} 股 | 現價: $${s.price}</p>
+                            <p class="text-xs text-gray-400 mt-1">${s.shares.toLocaleString()} 股 | 現價: $${s.price.toLocaleString()}</p>
                         </div>
                         <div class="text-right">
-                            <p class="font-bold text-sm">NT$ ${marketVal.toLocaleString()}</p>
+                            <p class="font-bold text-sm">NT$ ${Math.round(marketVal).toLocaleString()}</p>
                             ${s.isPledged ? `<p class="text-xs ${maintenanceRate < 160 ? 'text-red-400 font-bold' : 'text-orange-400'}">維持率: ${maintenanceRate}%</p>` : ''}
                         </div>
                     </div>
@@ -161,14 +205,14 @@ HTML
                 totalInterest += monthly;
                 liabEl.innerHTML += `
                     <div class="bg-gray-800/60 p-3 rounded-lg flex justify-between text-xs">
-                        <span>${l.name} (利率 ${l.rate}%)</span>
-                        <span class="text-gray-300">月息 ≈ NT$ ${Math.round(monthly).toLocaleString()}</span>
+                        <span>${l.name} (NT$ ${l.amount.toLocaleString()} | ${l.rate}%)</span>
+                        <span class="text-gray-300">預估月息 ≈ NT$ ${Math.round(monthly).toLocaleString()}</span>
                     </div>
                 `;
             });
 
-            document.getElementById('total-stock-val').innerText = 'NT$ ' + totalVal.toLocaleString();
-            document.getElementById('total-pledge-val').innerText = 'NT$ ' + totalPledge.toLocaleString();
+            document.getElementById('total-stock-val').innerText = 'NT$ ' + Math.round(totalVal).toLocaleString();
+            document.getElementById('total-pledge-val').innerText = 'NT$ ' + Math.round(totalPledge).toLocaleString();
             document.getElementById('total-monthly-interest').innerText = 'NT$ ' + Math.round(totalInterest).toLocaleString();
 
             const overallRate = totalPledge > 0 ? ((pledgedStockVal / totalPledge) * 100).toFixed(1) : 0;
