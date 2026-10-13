@@ -22,7 +22,7 @@
         </div>
         <h2 class="text-xl font-bold mb-2">個人資產防禦塔</h2>
         <p class="text-gray-400 text-sm mb-6">請驗證身份以進入儀表板</p>
-        <button onclick="unlockApp()" class="w-full max-w-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl shadow-lg transition">解鎖進入</button>
+        <button id="unlock-btn" type="button" class="w-full max-w-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl shadow-lg transition active:scale-95">解鎖進入</button>
     </div>
 
     <!-- 2. App 主要內容區 -->
@@ -32,7 +32,7 @@
         <div class="bg-gradient-to-br from-blue-700 to-indigo-900 rounded-2xl p-5 shadow-xl mb-6">
             <div class="flex justify-between items-center">
                 <span class="text-xs text-blue-200">總資產與質押概況</span>
-                <button onclick="resetData()" class="text-[10px] bg-red-500/30 text-red-200 border border-red-500/40 px-2 py-0.5 rounded-full">強制同步最新版本</button>
+                <button id="reset-btn" type="button" class="text-[10px] bg-red-500/30 text-red-200 border border-red-500/40 px-2 py-0.5 rounded-full">重設快取資料</button>
             </div>
             <div class="flex justify-between items-baseline mt-2">
                 <div>
@@ -52,7 +52,7 @@
 
         <!-- 券商篩選分頁 -->
         <div class="flex gap-2 overflow-x-auto pb-2 mb-4 text-xs">
-            <button onclick="filterBroker('全部')" id="btn-全部" class="broker-btn bg-blue-600 text-white px-4 py-2 rounded-full font-medium shrink-0">全部 (點擊查看明細)</button>
+            <button onclick="filterBroker('全部')" id="btn-全部" class="broker-btn bg-blue-600 text-white px-4 py-2 rounded-full font-medium shrink-0">全部 (點擊展開明細)</button>
             <button onclick="filterBroker('證金')" id="btn-證金" class="broker-btn bg-gray-800 text-gray-300 px-4 py-2 rounded-full font-medium shrink-0">證金</button>
             <button onclick="filterBroker('富邦')" id="btn-富邦" class="broker-btn bg-gray-800 text-gray-300 px-4 py-2 rounded-full font-medium shrink-0">富邦</button>
             <button onclick="filterBroker('國泰')" id="btn-國泰" class="broker-btn bg-gray-800 text-gray-300 px-4 py-2 rounded-full font-medium shrink-0">國泰</button>
@@ -70,3 +70,164 @@
     </div>
 
     <script>
+        const initialStocks = [
+            { name: '台積電', code: '2330', shares: 1000, price: 2500, broker: '證金', isPledged: true, pledgeAmount: 950000 },
+            { name: '國泰費城半導體', code: '00830', shares: 28000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 759000 },
+            { name: '台灣元大50', code: '0050', shares: 8000, price: 112.8, broker: '證金', isPledged: true, pledgeAmount: 350000 },
+            { name: '復華SP500', code: '00924', shares: 20000, price: 34.01, broker: '證金', isPledged: true, pledgeAmount: 280000 },
+            { name: '國泰費城半導體', code: '00830', shares: 5000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 250000 },
+            { name: '台灣元大50', code: '0050', shares: 6000, price: 112.8, broker: '證金', isPledged: true, pledgeAmount: 150000 },
+            { name: '復華SP500', code: '00924', shares: 10000, price: 34.01, broker: '證金', isPledged: true, pledgeAmount: 130000 },
+            { name: '富邦科技', code: '0052', shares: 4000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 100000 },
+            { name: '富邦科技', code: '0052', shares: 4000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 100000 },
+            { name: '國泰費城半導體', code: '00830', shares: 3000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 90000 },
+            { name: '國泰費城半導體', code: '00830', shares: 3000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 90000 },
+            { name: '富邦科技', code: '0052', shares: 3000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 90000 },
+            { name: '主動復華未來50', code: '00981A', shares: 10000, price: 18.69, broker: '證金', isPledged: true, pledgeAmount: 80000 },
+            { name: '主動復華未來50', code: '00981A', shares: 8000, price: 18.69, broker: '證金', isPledged: true, pledgeAmount: 80000 },
+            { name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 80000 },
+            { name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 80000 },
+            { name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 80000 },
+            { name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 70000 },
+            { name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 70000 },
+            { name: '台灣元大50', code: '0050', shares: 1000, price: 112.8, broker: '證金', isPledged: true, pledgeAmount: 48000 },
+            { name: '富邦科技', code: '0052', shares: 1000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 28000 },
+            { name: '主動復華未來50', code: '00981A', shares: 2000, price: 18.69, broker: '證金', isPledged: true, pledgeAmount: 17000 },
+            { name: '奔騰', code: 'BT', shares: 1, price: 14387, broker: '證金', isPledged: true, pledgeAmount: 10000 },
+            { name: '元大台灣50正二', code: '00631L', shares: 56000, price: 39.58, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { name: '主動復華未來50', code: '00981A', shares: 20000, price: 18.69, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { name: '主動群益科技創新', code: '00992A', shares: 7000, price: 19.4, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { name: '主動統一台股增長', code: '00988A', shares: 6000, price: 31.44, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { name: '主動復華金融股息', code: '00982A', shares: 6000, price: 15.95, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { name: '國泰費城半導體', code: '00830', shares: 4150, price: 91.25, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { name: '富邦NASDAQ100', code: '00662', shares: 4000, price: 125.6, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { name: '統一FANG+', code: '00757', shares: 1020, price: 144.1, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { name: '主動統一升級', code: '00989A', shares: 1000, price: 9.74, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { name: '台積電', code: '2330', shares: 790, price: 2500, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { name: '金居', code: '8358', shares: 100, price: 519, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { name: '複委託 (美股現值)', code: 'US_STOCK', shares: 1, price: 20320, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { name: '台灣元大50', code: '0050', shares: 1000, price: 112.8, broker: '證金', isPledged: false, pledgeAmount: 0 },
+            { name: '國泰費城半導體', code: '00830', shares: 1000, price: 91.25, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { name: '台積電', code: '2330', shares: 12, price: 2500, broker: '中信', isPledged: false, pledgeAmount: 0 },
+            { name: '台積電', code: '2330', shares: 2827, price: 2500, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { name: '元大台灣50正二', code: '00631L', shares: 23000, price: 39.58, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { name: '復華SP500', code: '00924', shares: 100, price: 34.01, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { name: '複委託 (美股現值)', code: 'US_STOCK2', shares: 1, price: 32905, broker: '富邦', isPledged: false, pledgeAmount: 0 }
+        ];
+
+        let liabilityData = [
+            { name: '房屋貸款 A', amount: 10693781, rate: 2.15 },
+            { name: '房屋貸款 B', amount: 6893440, rate: 2.15 },
+            { name: '信用貸款', amount: 4144071, rate: 2.88 },
+            { name: '學長借款', amount: 8800000, rate: 0.0 }
+        ];
+
+        let rawStockData = initialStocks;
+        let activeBroker = '全部';
+
+        // 綁定解鎖與重設事件
+        document.addEventListener('DOMContentLoaded', () => {
+            const unlockBtn = document.getElementById('unlock-btn');
+            const authScreen = document.getElementById('auth-screen');
+            const appContent = document.getElementById('app-content');
+            const resetBtn = document.getElementById('reset-btn');
+
+            if (unlockBtn) {
+                unlockBtn.addEventListener('click', () => {
+                    authScreen.style.display = 'none';
+                    appContent.classList.remove('hidden');
+                    render();
+                });
+            }
+
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                    localStorage.clear();
+                    location.reload();
+                });
+            }
+        });
+
+        function toggleDetail(cardId) {
+            const detailEl = document.getElementById(cardId);
+            const iconEl = document.getElementById(cardId + '-icon');
+            if (detailEl) {
+                if (detailEl.classList.contains('hidden')) {
+                    detailEl.classList.remove('hidden');
+                    if (iconEl) iconEl.innerText = '▲';
+                } else {
+                    detailEl.classList.add('hidden');
+                    if (iconEl) iconEl.innerText = '▼';
+                }
+            }
+        }
+
+        function render() {
+            const listEl = document.getElementById('stock-list');
+            listEl.innerHTML = '';
+
+            document.querySelectorAll('.broker-btn').forEach(btn => {
+                btn.className = "broker-btn bg-gray-800 text-gray-300 px-4 py-2 rounded-full font-medium shrink-0";
+            });
+            const activeBtn = document.getElementById(`btn-${activeBroker}`);
+            if (activeBtn) activeBtn.className = "broker-btn bg-blue-600 text-white px-4 py-2 rounded-full font-medium shrink-0";
+
+            let grandTotalVal = 0;
+            let grandTotalPledge = 0;
+            let grandPledgedStockVal = 0;
+
+            rawStockData.forEach(s => {
+                const mv = s.shares * s.price;
+                grandTotalVal += mv;
+                if (s.isPledged && s.pledgeAmount > 0) {
+                    grandTotalPledge += s.pledgeAmount;
+                    grandPledgedStockVal += mv;
+                }
+            });
+
+            if (activeBroker === '全部') {
+                const aggregated = {};
+                rawStockData.forEach((s) => {
+                    const key = s.code + '_' + s.name;
+                    if (!aggregated[key]) {
+                        aggregated[key] = {
+                            code: s.code,
+                            name: s.name,
+                            totalShares: 0,
+                            price: s.price,
+                            totalPledge: 0,
+                            pledgedShares: 0,
+                            details: []
+                        };
+                    }
+                    aggregated[key].totalShares += s.shares;
+                    aggregated[key].details.push(s);
+                    if (s.isPledged) {
+                        aggregated[key].totalPledge += s.pledgeAmount;
+                        aggregated[key].pledgedShares += s.shares;
+                    }
+                });
+
+                Object.values(aggregated).forEach((item, index) => {
+                    const totalMV = item.totalShares * item.price;
+                    const cardId = `detail-${index}`;
+                    
+                    let mRateText = '';
+                    if (item.totalPledge > 0) {
+                        const pledgedMV = item.pledgedShares * item.price;
+                        const mRate = ((pledgedMV / item.totalPledge) * 100).toFixed(1);
+                        mRateText = `<span class="${mRate < 160 ? 'text-red-400 font-bold' : 'text-orange-400'}">總維持率 ${mRate}%</span>`;
+                    }
+
+                    let detailRowsHtml = '';
+                    item.details.forEach(d => {
+                        const subMV = d.shares * d.price;
+                        let subRateText = '';
+                        if (d.isPledged && d.pledgeAmount > 0) {
+                            const subRate = ((subMV / d.pledgeAmount) * 100).toFixed(1);
+                            subRateText = ` | 維持率: ${subRate}\% (借 $${d.pledgeAmount.toLocaleString()})`;
+                        }
+                        detailRowsHtml += `
+                            <div class="flex justify-between items-center py-1.5 border-b border-gray-700/40 text-xs text-gray-300">
+                                <div>
+                                    <span class="bg-gray-700 text-blue-300 px-1.5 py-0.5 rounded text-[10px] mr-1.5">${d
