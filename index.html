@@ -60,7 +60,6 @@
                 <div class="w-full max-w-[260px] mx-auto my-2">
                     <canvas id="pieChart"></canvas>
                 </div>
-                <!-- 百分比數據文字排版 -->
                 <div id="pie-percentage-list" class="mt-4 pt-3 border-t border-gray-700/80 space-y-1.5 text-xs"></div>
             </div>
 
@@ -114,7 +113,7 @@
                 </div>
                 <div class="flex gap-2">
                     <input type="file" id="stock-img-input" accept="image/*" class="hidden" onchange="autoScanStockImg(event)">
-                    <button onclick="document.getElementById('stock-img-input').click()" class="bg-purple-600 hover:bg-purple-500 text-white text-xs px-2.5 py-1.5 rounded-lg font-medium">📸 掃描</button>
+                    <button onclick="document.getElementById('stock-img-input').click()" class="bg-purple-600 hover:bg-purple-500 text-white text-xs px-2.5 py-1.5 rounded-lg font-medium">📸 截圖掃描</button>
                     <button onclick="editStockModal(-1)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-2.5 py-1.5 rounded-lg font-medium">+ 新增</button>
                 </div>
             </div>
@@ -264,8 +263,8 @@
                 const cloudData = await res.json();
                 if (cloudData && cloudData.stocks && cloudData.stocks.length > 0) {
                     stocksData = cloudData.stocks;
-                    debtsData = cloudData.debts || debtsData;
-                    rspData = cloudData.rsp || rspData;
+                    debtsData = (cloudData.debts && cloudData.debts.length > 0) ? cloudData.debts : debtsData;
+                    rspData = (cloudData.rsp && cloudData.rsp.length > 0) ? cloudData.rsp : rspData;
                     statusEl.innerHTML = "🟢 已與 Google Sheet 即時同步 (" + new Date().toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) + ")";
                 } else {
                     stocksData = fullStockData;
@@ -323,7 +322,7 @@
                     code: code,
                     shares: shares,
                     price: 100,
-                    broker: '截圖辨識',
+                    broker: '證金',
                     isPledged: false,
                     pledgeAmount: 0
                 });
@@ -398,7 +397,6 @@
             document.getElementById('monthly-rsp-sub').innerText = 'NT$ ' + Math.round(totalRsp).toLocaleString();
         }
 
-        // 畫個股圓餅圖並顯示明確的百分比（含排行列表）
         function renderPieChart() {
             const ctx = document.getElementById('pieChart').getContext('2d');
             const listEl = document.getElementById('pie-percentage-list');
@@ -413,7 +411,6 @@
                 grandTotal += mv;
             });
 
-            // 依市值由大到小排序
             const sortedItems = Object.entries(aggregated)
                 .map(([name, val]) => ({
                     name,
@@ -464,7 +461,6 @@
                 }
             });
 
-            // 渲染圓餅圖下方的【個股佔比明細與百分比清單】
             if (listEl) {
                 listEl.innerHTML = '<p class="font-bold text-gray-300 mb-2">📊 個股佔比排行與金額明細：</p>';
                 sortedItems.forEach((item, i) => {
@@ -537,7 +533,7 @@
             if (activeBtn) activeBtn.className = "broker-btn bg-blue-600 text-white px-3 py-1.5 rounded-full font-medium shrink-0";
 
             if (stocksData.length === 0) {
-                listEl.innerHTML = `<div class="text-center py-8 text-gray-500 text-xs">尚無股票庫存資料，請點選上方「📸 掃描」或「+ 新增」</div>`;
+                listEl.innerHTML = `<div class="text-center py-8 text-gray-500 text-xs">尚無股票庫存資料，請點選上方「📸 截圖掃描」或「+ 新增」</div>`;
                 return;
             }
 
@@ -708,6 +704,7 @@
 
         function renderRsp() {
             const listEl = document.getElementById('rsp-list');
+            if (!listEl) return;
             listEl.innerHTML = '';
             rspData.forEach((r, idx) => {
                 listEl.innerHTML += `
