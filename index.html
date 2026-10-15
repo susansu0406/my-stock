@@ -20,7 +20,7 @@
 
     <div id="app-content" class="max-w-lg mx-auto p-4">
         
-        <!-- 全域頂部工具列 (任何頁面皆可直接掃描) -->
+        <!-- 全域頂部工具列 -->
         <div class="mb-3 bg-gray-800 border border-gray-700 rounded-xl p-3 flex justify-between items-center text-xs">
             <div class="flex items-center gap-2">
                 <span class="font-bold text-blue-400 text-sm">🏰 資產防禦塔</span>
@@ -29,7 +29,7 @@
             <div class="flex items-center gap-2">
                 <input type="file" id="global-img-input" accept="image/*" class="hidden" onchange="autoScanStockImg(event)">
                 <button onclick="document.getElementById('global-img-input').click()" class="bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow-md flex items-center gap-1">
-                    📸 拍照 / 截圖掃描
+                    📸 截圖 / 拍照掃描
                 </button>
                 <button onclick="loadFromCloud(true)" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-2.5 py-1.5 rounded-lg text-[11px]">🔄</button>
             </div>
@@ -45,7 +45,7 @@
         </div>
 
         <div id="scan-status" class="hidden mb-4 bg-blue-950/80 border border-blue-500/50 p-3 rounded-xl text-xs text-blue-300 flex items-center justify-between">
-            <span id="scan-msg">正在自動辨識截圖內容並同步至雲端...</span>
+            <span id="scan-msg">正在分析截圖內容，並過濾年份雜訊...</span>
             <span class="animate-spin">🌀</span>
         </div>
 
@@ -174,7 +174,7 @@
 
     </div>
 
-    <!-- 編輯 Modal 彈窗 -->
+    <!-- 編輯 / 辨識預估 Modal 彈窗 -->
     <div id="edit-modal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-sm p-5 space-y-4">
             <div class="flex justify-between items-center border-b border-gray-700 pb-2">
@@ -302,7 +302,7 @@
             }
         }
 
-        // 精準改進後的辨識邏輯：不強制寫死 2330
+        // 智慧過濾：自動辨識是「定期定額/基金」還是「股票質押」，並開彈窗讓您確認
         async function autoScanStockImg(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -316,33 +316,37 @@
                 statusEl.classList.add('hidden');
 
                 const text = ret.data.text;
-                // 抓取 3~6 位數股票或 ETF 代碼
-                const codeMatch = text.match(/\b(2330|00830|0050|00924|0052|00631L|00992A|00988A|00982A|00662|00757|00989A|00981A|8358|\d{4,5}[A-Z]?)\b/i);
-                const amounts = text.match(/\d{1,3}(,\d{3})+|\d+/g);
 
-                if (!codeMatch && !amounts) {
-                    alert("⚠️ 截圖較難直接識別文字，請點擊「+ 手動新增」補充輸入！");
-                    return;
+                // 檢查是否包含「鉅亨」、「基金」、「定期定額」、「基富通」等關鍵字
+                const isRspKey = /鉅亨|基金|定期定額|基富通|復華|統一/i.test(text);
+
+                // 提取純數字並過濾掉 2024, 2025, 2026 等年份數字
+                const rawNumbers = text.match(/\d{1,3}(,\d{3})+|\d+/g) || [];
+                const filteredNumbers = rawNumbers.map(n => parseInt(n.replace(/,/g, ''))).filter(num => num !== 2024 && num !== 2025 && num !== 2026 && num !== 2027);
+
+                if (isRspKey) {
+                    // 帶入定期定額 Modal 彈窗預覽
+                    switchTab('rsp');
+                    editRspModal(-1);
+                    const targetInput = document.getElementById('md-rsp-target');
+                    const amountInput = document.getElementById('md-rsp-amount');
+                    if (targetInput) targetInput.value = "鉅亨 / 基金扣款標的";
+                    if (amountInput && filteredNumbers.length > 0) amountInput.value = filteredNumbers[0];
+                    alert("🔍 已自動辨識為「定期定額 / 基金」，請確認彈窗欄位資料後點擊【儲存並同步】！");
+                } else {
+                    // 帶入股票 Modal 彈窗預覽
+                    switchTab('stocks');
+                    editStockModal(-1);
+                    const nameInput = document.getElementById('md-stock-name');
+                    const sharesInput = document.getElementById('md-stock-shares');
+                    if (nameInput) nameInput.value = "辨識標的";
+                    if (sharesInput && filteredNumbers.length > 0) sharesInput.value = filteredNumbers[0];
+                    alert("🔍 已自動帶入彈窗，請確認標的名與股數後點擊【儲存並同步】！");
                 }
 
-                const code = codeMatch ? codeMatch[0] : '掃描標的';
-                const shares = amounts ? (parseInt(amounts[0].replace(/,/g, '')) || 1000) : 1000;
-
-                stocksData.push({
-                    id: Date.now(),
-                    name: code,
-                    code: code,
-                    shares: shares,
-                    price: 100,
-                    broker: '證金',
-                    isPledged: false,
-                    pledgeAmount: 0
-                });
-                saveData();
-                alert(`✅ 已識別並新增標的「${code}」，可隨時編輯更正股數與價格！`);
             } catch (err) {
                 statusEl.classList.add('hidden');
-                alert("圖片讀取失敗，請點擊「+ 手動新增」填寫");
+                alert("截圖辨識完成，請手動確認填寫");
             }
         }
 
@@ -545,7 +549,7 @@
             if (activeBtn) activeBtn.className = "broker-btn bg-blue-600 text-white px-3 py-1.5 rounded-full font-medium shrink-0";
 
             if (stocksData.length === 0) {
-                listEl.innerHTML = `<div class="text-center py-8 text-gray-500 text-xs">尚無股票庫存資料，請點選上方「📸 拍照 / 截圖掃描」或「+ 手動新增」</div>`;
+                listEl.innerHTML = `<div class="text-center py-8 text-gray-500 text-xs">尚無股票庫存資料，請點選右上角「📸 截圖 / 拍照掃描」或「+ 手動新增」</div>`;
                 return;
             }
 
