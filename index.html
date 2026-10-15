@@ -186,6 +186,52 @@
     <script>
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-vNLgGKm5anz6vre21T_K7BENgOs8PcZoRa0MdsE5yfWFbYuhB5r697e7XLjI_axN/exec";
 
+        // 完整的 42 筆原始股票與質押數據預設庫存
+        const fullStockData = [
+            { id: 1, name: '台積電', code: '2330', shares: 1000, price: 2500, broker: '證金', isPledged: true, pledgeAmount: 950000 },
+            { id: 2, name: '國泰費城半導體', code: '00830', shares: 28000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 759000 },
+            { id: 3, name: '台灣元大50', code: '0050', shares: 8000, price: 112.8, broker: '證金', isPledged: true, pledgeAmount: 350000 },
+            { id: 4, name: '復華SP500', code: '00924', shares: 20000, price: 34.01, broker: '證金', isPledged: true, pledgeAmount: 280000 },
+            { id: 5, name: '國泰費城半導體', code: '00830', shares: 5000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 250000 },
+            { id: 6, name: '台灣元大50', code: '0050', shares: 6000, price: 112.8, broker: '證金', isPledged: true, pledgeAmount: 150000 },
+            { id: 7, name: '復華SP500', code: '00924', shares: 10000, price: 34.01, broker: '證金', isPledged: true, pledgeAmount: 130000 },
+            { id: 8, name: '富邦科技', code: '0052', shares: 4000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 100000 },
+            { id: 9, name: '富邦科技', code: '0052', shares: 4000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 100000 },
+            { id: 10, name: '國泰費城半導體', code: '00830', shares: 3000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 90000 },
+            { id: 11, name: '國泰費城半導體', code: '00830', shares: 3000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 90000 },
+            { id: 12, name: '富邦科技', code: '0052', shares: 3000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 90000 },
+            { id: 13, name: '主動復華未來50', code: '00981A', shares: 10000, price: 18.69, broker: '證金', isPledged: true, pledgeAmount: 80000 },
+            { id: 14, name: '主動復華未來50', code: '00981A', shares: 8000, price: 18.69, broker: '證金', isPledged: true, pledgeAmount: 80000 },
+            { id: 15, name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 80000 },
+            { id: 16, name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 80000 },
+            { id: 17, name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 80000 },
+            { id: 18, name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 70000 },
+            { id: 19, name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 70000 },
+            { id: 20, name: '台灣元大50', code: '0050', shares: 1000, price: 112.8, broker: '證金', isPledged: true, pledgeAmount: 48000 },
+            { id: 21, name: '富邦科技', code: '0052', shares: 1000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 28000 },
+            { id: 22, name: '主動復華未來50', code: '00981A', shares: 2000, price: 18.69, broker: '證金', isPledged: true, pledgeAmount: 17000 },
+            { id: 23, name: '奔騰', code: 'BT', shares: 1, price: 14387, broker: '證金', isPledged: true, pledgeAmount: 10000 },
+            { id: 24, name: '元大台灣50正二', code: '00631L', shares: 56000, price: 39.58, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 25, name: '主動復華未來50', code: '00981A', shares: 20000, price: 18.69, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 26, name: '主動群益科技創新', code: '00992A', shares: 7000, price: 19.4, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 27, name: '主動統一台股增長', code: '00988A', shares: 6000, price: 31.44, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 28, name: '主動復華金融股息', code: '00982A', shares: 6000, price: 15.95, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 29, name: '國泰費城半導體', code: '00830', shares: 4150, price: 91.25, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 30, name: '富邦NASDAQ100', code: '00662', shares: 4000, price: 125.6, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { id: 31, name: '統一FANG+', code: '00757', shares: 1020, price: 144.1, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 32, name: '主動統一升級', code: '00989A', shares: 1000, price: 9.74, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 33, name: '台積電', code: '2330', shares: 790, price: 2500, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 34, name: '金居', code: '8358', shares: 100, price: 519, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { id: 35, name: '複委託 (美股現值)', code: 'US_STOCK', shares: 1, price: 20320, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { id: 36, name: '台灣元大50', code: '0050', shares: 1000, price: 112.8, broker: '證金', isPledged: false, pledgeAmount: 0 },
+            { id: 37, name: '國泰費城半導體', code: '00830', shares: 1000, price: 91.25, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { id: 38, name: '台積電', code: '2330', shares: 12, price: 2500, broker: '中信', isPledged: false, pledgeAmount: 0 },
+            { id: 39, name: '台積電', code: '2330', shares: 2827, price: 2500, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { id: 40, name: '元大台灣50正二', code: '00631L', shares: 23000, price: 39.58, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { id: 41, name: '復華SP500', code: '00924', shares: 100, price: 34.01, broker: '富邦', isPledged: false, pledgeAmount: 0 },
+            { id: 42, name: '複委託 (美股現值)', code: 'US_STOCK2', shares: 1, price: 32905, broker: '富邦', isPledged: false, pledgeAmount: 0 }
+        ];
+
         let stocksData = [];
         let debtsData = [
             { id: 1, name: '房屋貸款 A', type: 'debt', amount: 10693781, rate: 2.15, bank: '台新銀行' },
@@ -221,10 +267,14 @@
                     rspData = cloudData.rsp || rspData;
                     statusEl.innerHTML = "🟢 已與 Google Sheet 即時同步 (" + new Date().toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) + ")";
                 } else {
-                    statusEl.innerHTML = "☁️ 雲端尚無股票資料，準備進行首次掃描紀錄";
+                    // 雲端無資料時，自動載入 42 筆預設庫存並同步寫入 Google Sheet
+                    stocksData = fullStockData;
+                    statusEl.innerHTML = "☁️ 雲端無資料，已自動寫入完整 42 筆庫存至 Google Sheet！";
+                    saveData();
                 }
             } catch (err) {
-                statusEl.innerHTML = "⚠️ 雲端讀取失敗，顯示暫存資料";
+                statusEl.innerHTML = "⚠️ 雲端讀取失敗，顯示預設資料";
+                stocksData = fullStockData;
             }
             renderAll();
         }
