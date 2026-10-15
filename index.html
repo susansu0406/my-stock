@@ -38,10 +38,10 @@
         <!-- 頂部頁面導覽列 -->
         <div class="flex justify-around border-b border-gray-800 mb-5 text-xs text-gray-400 bg-gray-900/90 sticky top-0 z-40 py-2">
             <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn pb-2 tab-active">📊 資產總覽</button>
+            <button onclick="switchTab('rsp')" id="tab-rsp" class="tab-btn pb-2">📅 定期定額/基金</button>
             <button onclick="switchTab('stocks')" id="tab-stocks" class="tab-btn pb-2">📈 股票質押</button>
             <button onclick="switchTab('history')" id="tab-history" class="tab-btn pb-2">📉 歷史走勢</button>
             <button onclick="switchTab('liabilities')" id="tab-liabilities" class="tab-btn pb-2">💳 借款負債</button>
-            <button onclick="switchTab('rsp')" id="tab-rsp" class="tab-btn pb-2">📅 定期定額</button>
         </div>
 
         <div id="scan-status" class="hidden mb-4 bg-blue-950/80 border border-blue-500/50 p-3 rounded-xl text-xs text-blue-300 flex items-center justify-between">
@@ -54,17 +54,17 @@
             <div class="bg-gradient-to-br from-indigo-900 to-blue-900 rounded-2xl p-5 shadow-xl border border-indigo-700/50">
                 <div class="flex justify-between items-center">
                     <p class="text-xs text-indigo-300 font-medium">個人預估淨資產 (Net Worth)</p>
-                    <span class="text-[10px] bg-green-500/20 text-green-300 px-2 py-0.5 rounded-full border border-green-500/30">Google Sheet 直連備份中</span>
+                    <span class="text-[10px] bg-green-500/20 text-green-300 px-2 py-0.5 rounded-full border border-green-500/30">已含自動扣款累計資產</span>
                 </div>
                 <p id="net-worth-val" class="text-3xl font-black text-white mt-1">NT$ 0</p>
-                <p class="text-[11px] text-indigo-200 mt-2">公式：股票 (NT$ <span id="ov-stock-val">0</span>) ＋ 學長借款 (NT$ <span id="ov-asset-debt-val">0</span>) － 房信貸 (NT$ <span id="ov-debt-val">0</span>) － 質押借款 (NT$ <span id="ov-pledge-debt-val">0</span>)</p>
+                <p class="text-[11px] text-indigo-200 mt-2">公式：股票與基金總額 (NT$ <span id="ov-stock-val">0</span>) ＋ 學長借款 (NT$ <span id="ov-asset-debt-val">0</span>) － 房信貸 (NT$ <span id="ov-debt-val">0</span>) － 質押借款 (NT$ <span id="ov-pledge-debt-val">0</span>)</p>
             </div>
 
             <!-- 個股持股比例圓餅圖 (含百分比明細) -->
             <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
                 <h3 class="font-bold text-sm text-gray-200 mb-2 flex justify-between items-center">
-                    <span>🍰 個股持股佔比 (%)</span>
-                    <span class="text-[10px] text-blue-400 font-normal">已自動計算百分比</span>
+                    <span>🍰 全資產 / 個股持股佔比 (%)</span>
+                    <span class="text-[10px] text-blue-400 font-normal">自動計算百分比</span>
                 </h3>
                 <div class="w-full max-w-[260px] mx-auto my-2">
                     <canvas id="pieChart"></canvas>
@@ -74,7 +74,7 @@
 
             <div class="grid grid-cols-2 gap-3">
                 <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
-                    <p class="text-xs text-gray-400">股票總市值</p>
+                    <p class="text-xs text-gray-400">股票 + 基金總資產</p>
                     <p id="ov-stock-val-2" class="text-lg font-bold text-blue-400 mt-1">NT$ 0</p>
                 </div>
                 <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
@@ -103,17 +103,56 @@
 
             <div class="bg-gray-800 rounded-xl p-4 border border-gray-700 space-y-2">
                 <div class="flex justify-between items-center">
-                    <span class="text-xs font-semibold text-gray-300">每月固定支出總額</span>
+                    <span class="text-xs font-semibold text-gray-300">每月固定總支出 (利息 + 定期定額)</span>
                     <span id="monthly-total-out" class="text-sm font-bold text-yellow-400">NT$ 0</span>
                 </div>
                 <div class="text-[11px] text-gray-400 space-y-1 pt-1 border-t border-gray-700/50">
                     <div class="flex justify-between"><span>預估房信貸月利息支出:</span><span id="monthly-interest-sub">NT$ 0</span></div>
-                    <div class="flex justify-between"><span>定期定額基金/股票扣款:</span><span id="monthly-rsp-sub">NT$ 0</span></div>
+                    <div class="flex justify-between"><span>每月定期定額自動扣款總額:</span><span id="monthly-rsp-sub">NT$ 0</span></div>
                 </div>
             </div>
         </div>
 
-        <!-- 2. 📈 股票與質押專區 -->
+        <!-- 2. 📅 定期定額 / 基金專區 (含集保風格獨立圓餅圖) -->
+        <div id="page-rsp" class="page-sec hidden space-y-4">
+            
+            <!-- 每月定期定額總覽卡片 -->
+            <div class="bg-gradient-to-r from-emerald-900 to-teal-900 p-4 rounded-xl border border-emerald-700/50 shadow-lg">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-xs text-emerald-300">📅 每月定期定額自動扣款總額</p>
+                        <p id="rsp-monthly-sum" class="text-2xl font-black text-white mt-0.5">NT$ 0</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] text-emerald-200">年度自動累積投資</p>
+                        <p id="rsp-yearly-sum" class="text-sm font-bold text-emerald-300">NT$ 0 / 年</p>
+                    </div>
+                </div>
+                <div class="mt-2 pt-2 border-t border-emerald-800/80 text-[11px] text-emerald-200/90 flex justify-between items-center">
+                    <span>⚡ 扣款日到了自動將金額加入淨資產</span>
+                    <button onclick="editRspModal(-1)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2.5 py-1 rounded text-xs">+ 新增定期定額</button>
+                </div>
+            </div>
+
+            <!-- 基金資產專屬圓餅圖 (比照集保 e 手保) -->
+            <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                <h3 class="font-bold text-sm text-gray-200 mb-2 flex justify-between items-center">
+                    <span>🏆 基金 / 定期定額專屬佔比 (%)</span>
+                    <span class="text-[10px] text-emerald-400 font-normal">集保風格佔比分析</span>
+                </h3>
+                <div class="w-full max-w-[240px] mx-auto my-2">
+                    <canvas id="fundPieChart"></canvas>
+                </div>
+                <div id="fund-percentage-list" class="mt-3 pt-3 border-t border-gray-700/80 space-y-1 text-xs"></div>
+            </div>
+
+            <div class="flex justify-between items-center pt-2">
+                <h3 class="font-bold text-sm text-white">📋 定期定額扣款明細與自動累積紀錄</h3>
+            </div>
+            <div id="rsp-list" class="space-y-3"></div>
+        </div>
+
+        <!-- 3. 📈 股票與質押專區 -->
         <div id="page-stocks" class="page-sec hidden space-y-4">
             <div class="flex justify-between items-center bg-gray-800 p-4 rounded-xl border border-gray-700">
                 <div>
@@ -132,23 +171,18 @@
             <div id="stock-list" class="space-y-3"></div>
         </div>
 
-        <!-- 3. 📉 歷史資產走勢頁面 -->
+        <!-- 4. 📉 歷史資產走勢頁面 -->
         <div id="page-history" class="page-sec hidden space-y-4">
             <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
                 <h3 class="font-bold text-sm text-gray-200 mb-1">📉 歷史淨資產與波段走勢圖</h3>
-                <p class="text-[11px] text-gray-400 mb-4">紀錄投資路上的真實波動高低點（非一路平穩直線上升）</p>
+                <p class="text-[11px] text-gray-400 mb-4">紀錄投資路上的真實波動高低點</p>
                 <div class="w-full h-64">
                     <canvas id="historyChart"></canvas>
                 </div>
             </div>
-            <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 text-xs text-gray-300 space-y-2">
-                <p class="font-bold text-white">💡 歷史波段小結：</p>
-                <p>• 投資歷程伴隨市場修正與槓桿調整，展現真實資產上下起伏。</p>
-                <p>• 質押維持率高低點對照有助於在震盪期控制開槓風險。</p>
-            </div>
         </div>
 
-        <!-- 4. 💳 房貸 / 信貸 / 私人借貸款項 獨立頁面 -->
+        <!-- 5. 💳 房貸 / 信貸 / 私人借貸款項 獨立頁面 -->
         <div id="page-liabilities" class="page-sec hidden space-y-4">
             <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex justify-between items-center">
                 <div>
@@ -158,18 +192,6 @@
                 <button onclick="editDebtModal(-1)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold">+ 新增項目</button>
             </div>
             <div id="debt-list" class="space-y-3"></div>
-        </div>
-
-        <!-- 5. 📅 定期定額扣款專區 -->
-        <div id="page-rsp" class="page-sec hidden space-y-4">
-            <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex justify-between items-center">
-                <div>
-                    <h3 class="font-bold text-sm">📅 每月定期定額扣款專區</h3>
-                    <p class="text-[11px] text-gray-400">每月固定扣款基金與股票</p>
-                </div>
-                <button onclick="editRspModal(-1)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold">+ 新增扣款</button>
-            </div>
-            <div id="rsp-list" class="space-y-3"></div>
         </div>
 
     </div>
@@ -245,15 +267,16 @@
             { id: 4, name: '學長借款 (借出應收款)', type: 'asset', amount: 8800000, rate: 0.0, bank: '個人 (學長)' }
         ];
         let rspData = [
-            { id: 1, target: '鉅亨買基金 - 復華台灣好收益', amount: 10000, day: 6, bank: '國泰帳戶' },
-            { id: 2, target: '基富通 - 統一黑馬基金', amount: 5000, day: 15, bank: '富邦帳戶' },
-            { id: 3, target: '國泰證券 - 00830 定期定額', amount: 10000, day: 26, bank: '交割戶' }
+            { id: 1, target: '鉅亨買基金 - 復華台灣好收益', amount: 10000, day: 6, startYearMonth: '2025-01', baseVal: 120000, bank: '國泰帳戶' },
+            { id: 2, target: '基富通 - 統一黑馬基金', amount: 5000, day: 15, startYearMonth: '2025-01', baseVal: 60000, bank: '富邦帳戶' },
+            { id: 3, target: '國泰證券 - 00830 定期定額', amount: 10000, day: 26, startYearMonth: '2025-01', baseVal: 120000, bank: '交割戶' }
         ];
 
         let activeBroker = '全部';
         let currentModalCategory = '';
         let currentModalIndex = -1;
         let myPieChart = null;
+        let myFundPieChart = null;
         let myHistoryChart = null;
 
         window.onload = function() {
@@ -302,7 +325,36 @@
             }
         }
 
-        // 智慧過濾：自動辨識是「定期定額/基金」還是「股票質押」，並開彈窗讓您確認
+        // 計算定期定額依時間自動累加後的總價值
+        function calculateRspAccumulated(r) {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth() + 1; // 1 ~ 12
+            const currentDay = now.getDate();
+
+            let startYear = 2025;
+            let startMonth = 1;
+            if (r.startYearMonth) {
+                const parts = r.startYearMonth.split('-');
+                startYear = parseInt(parts[0]) || 2025;
+                startMonth = parseInt(parts[1]) || 1;
+            }
+
+            // 計算經過幾個月
+            let monthsPassed = (currentYear - startYear) * 12 + (currentMonth - startMonth);
+            // 如果當月還沒到扣款日，不計當月
+            if (currentDay < (r.day || 1)) {
+                monthsPassed -= 1;
+            }
+            if (monthsPassed < 0) monthsPassed = 0;
+
+            const autoAddedValue = monthsPassed * r.amount;
+            const totalAccumulated = (r.baseVal || 0) + autoAddedValue;
+
+            return { monthsPassed, autoAddedValue, totalAccumulated };
+        }
+
+        // 智慧過濾：自動辨識截圖
         async function autoScanStockImg(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -316,16 +368,12 @@
                 statusEl.classList.add('hidden');
 
                 const text = ret.data.text;
-
-                // 檢查是否包含「鉅亨」、「基金」、「定期定額」、「基富通」等關鍵字
                 const isRspKey = /鉅亨|基金|定期定額|基富通|復華|統一/i.test(text);
 
-                // 提取純數字並過濾掉 2024, 2025, 2026 等年份數字
                 const rawNumbers = text.match(/\d{1,3}(,\d{3})+|\d+/g) || [];
                 const filteredNumbers = rawNumbers.map(n => parseInt(n.replace(/,/g, ''))).filter(num => num !== 2024 && num !== 2025 && num !== 2026 && num !== 2027);
 
                 if (isRspKey) {
-                    // 帶入定期定額 Modal 彈窗預覽
                     switchTab('rsp');
                     editRspModal(-1);
                     const targetInput = document.getElementById('md-rsp-target');
@@ -334,7 +382,6 @@
                     if (amountInput && filteredNumbers.length > 0) amountInput.value = filteredNumbers[0];
                     alert("🔍 已自動辨識為「定期定額 / 基金」，請確認彈窗欄位資料後點擊【儲存並同步】！");
                 } else {
-                    // 帶入股票 Modal 彈窗預覽
                     switchTab('stocks');
                     editStockModal(-1);
                     const nameInput = document.getElementById('md-stock-name');
@@ -364,6 +411,7 @@
             renderDebts();
             renderRsp();
             renderPieChart();
+            renderFundPieChart();
         }
 
         function renderOverview() {
@@ -377,6 +425,17 @@
                 }
             });
 
+            // 加入定期定額自動累加資產
+            let totalRspAccumulated = 0;
+            let totalMonthlyRsp = 0;
+            rspData.forEach(r => {
+                totalMonthlyRsp += r.amount;
+                const calc = calculateRspAccumulated(r);
+                totalRspAccumulated += calc.totalAccumulated;
+            });
+
+            const grandTotalAsset = totalStockVal + totalRspAccumulated;
+
             let totalRealDebt = 0, totalAssetDebt = 0, totalMonthlyInterest = 0;
             debtsData.forEach(d => {
                 if (d.type === 'asset') {
@@ -387,19 +446,16 @@
                 }
             });
 
-            let totalRsp = 0;
-            rspData.forEach(r => totalRsp += r.amount);
-
-            const netWorth = totalStockVal + totalAssetDebt - totalRealDebt - totalPledgeAmt;
+            const netWorth = grandTotalAsset + totalAssetDebt - totalRealDebt - totalPledgeAmt;
             const overallRate = totalPledgeAmt > 0 ? ((pledgedMV / totalPledgeAmt) * 100).toFixed(1) : 0;
 
             document.getElementById('net-worth-val').innerText = 'NT$ ' + Math.round(netWorth).toLocaleString();
-            document.getElementById('ov-stock-val').innerText = Math.round(totalStockVal).toLocaleString();
+            document.getElementById('ov-stock-val').innerText = Math.round(grandTotalAsset).toLocaleString();
             document.getElementById('ov-asset-debt-val').innerText = Math.round(totalAssetDebt).toLocaleString();
             document.getElementById('ov-debt-val').innerText = Math.round(totalRealDebt).toLocaleString();
             document.getElementById('ov-pledge-debt-val').innerText = Math.round(totalPledgeAmt).toLocaleString();
 
-            document.getElementById('ov-stock-val-2').innerText = 'NT$ ' + Math.round(totalStockVal).toLocaleString();
+            document.getElementById('ov-stock-val-2').innerText = 'NT$ ' + Math.round(grandTotalAsset).toLocaleString();
             document.getElementById('ov-asset-debt-val-2').innerText = '+ NT$ ' + Math.round(totalAssetDebt).toLocaleString();
             document.getElementById('ov-debt-val-2').innerText = '- NT$ ' + Math.round(totalRealDebt).toLocaleString();
             document.getElementById('ov-pledge-debt-val-2').innerText = '- NT$ ' + Math.round(totalPledgeAmt).toLocaleString();
@@ -408,9 +464,76 @@
             document.getElementById('ov-pledged-mv').innerText = '$' + Math.round(pledgedMV).toLocaleString();
             document.getElementById('ov-pledged-amt').innerText = '$' + Math.round(totalPledgeAmt).toLocaleString();
 
-            document.getElementById('monthly-total-out').innerText = 'NT$ ' + Math.round(totalMonthlyInterest + totalRsp).toLocaleString();
+            document.getElementById('monthly-total-out').innerText = 'NT$ ' + Math.round(totalMonthlyInterest + totalMonthlyRsp).toLocaleString();
             document.getElementById('monthly-interest-sub').innerText = 'NT$ ' + Math.round(totalMonthlyInterest).toLocaleString();
-            document.getElementById('monthly-rsp-sub').innerText = 'NT$ ' + Math.round(totalRsp).toLocaleString();
+            document.getElementById('monthly-rsp-sub').innerText = 'NT$ ' + Math.round(totalMonthlyRsp).toLocaleString();
+        }
+
+        // 基金獨立圓餅圖 (集保 e 手保風格)
+        function renderFundPieChart() {
+            const ctx = document.getElementById('fundPieChart');
+            if (!ctx) return;
+            const listEl = document.getElementById('fund-percentage-list');
+
+            let grandTotalFund = 0;
+            const fundItems = rspData.map(r => {
+                const calc = calculateRspAccumulated(r);
+                grandTotalFund += calc.totalAccumulated;
+                return {
+                    target: r.target,
+                    monthlyAmount: r.amount,
+                    val: calc.totalAccumulated
+                };
+            }).sort((a, b) => b.val - a.val);
+
+            const labels = fundItems.map(item => {
+                const pct = grandTotalFund > 0 ? ((item.val / grandTotalFund) * 100).toFixed(1) : 0;
+                return `${item.target} (${pct}%)`;
+            });
+            const dataValues = fundItems.map(item => item.val);
+
+            const chartColors = ['#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#84cc16'];
+
+            if (myFundPieChart) myFundPieChart.destroy();
+
+            myFundPieChart = new Chart(ctx.getContext('2d'), {
+                type: 'pie',
+                data: {
+                    labels: labels.length > 0 ? labels : ['無基金資料'],
+                    datasets: [{
+                        data: dataValues.length > 0 ? dataValues : [1],
+                        backgroundColor: chartColors.slice(0, Math.max(labels.length, 1)),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#9ca3af', font: { size: 10 }, boxWidth: 10 } }
+                    },
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+
+            if (listEl) {
+                listEl.innerHTML = '';
+                fundItems.forEach((item, i) => {
+                    const pct = grandTotalFund > 0 ? ((item.val / grandTotalFund) * 100).toFixed(1) : 0;
+                    const color = chartColors[i % chartColors.length];
+                    listEl.innerHTML += `
+                        <div class="flex justify-between items-center py-1 border-b border-gray-700/40">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color: ${color}"></span>
+                                <span class="font-medium text-gray-200">${item.target}</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="font-bold text-emerald-400 mr-2">${pct}%</span>
+                                <span class="text-gray-400 font-mono">NT$ ${Math.round(item.val).toLocaleString()}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
         }
 
         function renderPieChart() {
@@ -425,6 +548,13 @@
                 const mv = s.shares * s.price;
                 aggregated[name] = (aggregated[name] || 0) + mv;
                 grandTotal += mv;
+            });
+
+            // 把定期定額基金也納入全資產圓餅圖
+            rspData.forEach(r => {
+                const calc = calculateRspAccumulated(r);
+                aggregated[r.target] = (aggregated[r.target] || 0) + calc.totalAccumulated;
+                grandTotal += calc.totalAccumulated;
             });
 
             const sortedItems = Object.entries(aggregated)
@@ -458,19 +588,7 @@
                 },
                 options: {
                     plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { color: '#9ca3af', font: { size: 10 }, boxWidth: 12 }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const val = context.raw || 0;
-                                    const pct = grandTotal > 0 ? ((val / grandTotal) * 100).toFixed(1) : 0;
-                                    return ` 市值: NT$ ${Math.round(val).toLocaleString()} (${pct}%)`;
-                                }
-                            }
-                        }
+                        legend: { position: 'bottom', labels: { color: '#9ca3af', font: { size: 10 }, boxWidth: 10 } }
                     },
                     responsive: true,
                     maintainAspectRatio: true
@@ -478,7 +596,7 @@
             });
 
             if (listEl) {
-                listEl.innerHTML = '<p class="font-bold text-gray-300 mb-2">📊 個股佔比排行與金額明細：</p>';
+                listEl.innerHTML = '<p class="font-bold text-gray-300 mb-2">📊 個股與基金佔比排行與金額明細：</p>';
                 sortedItems.forEach((item, i) => {
                     const color = chartColors[i % chartColors.length];
                     listEl.innerHTML += `
@@ -722,20 +840,40 @@
             const listEl = document.getElementById('rsp-list');
             if (!listEl) return;
             listEl.innerHTML = '';
+
+            let monthlySum = 0;
+
             rspData.forEach((r, idx) => {
+                monthlySum += r.amount;
+                const calc = calculateRspAccumulated(r);
+
                 listEl.innerHTML += `
-                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex justify-between items-center text-xs">
-                        <div>
-                            <p class="font-bold text-sm text-white">${r.target}</p>
-                            <p class="text-gray-400 mt-1">每月 <strong class="text-yellow-400">${r.day} 號</strong> 扣款 | 帳戶: ${r.bank}</p>
+                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 space-y-2 text-xs">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-bold text-sm text-white">${r.target}</p>
+                                <p class="text-gray-400 mt-1">每月 <strong class="text-yellow-400">${r.day} 號</strong> 扣款 | 扣款戶: ${r.bank}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold text-emerald-400 text-sm">NT$ ${r.amount.toLocaleString()} / 月</p>
+                                <button onclick="editRspModal(${idx})" class="text-[10px] bg-gray-700 text-blue-300 px-2 py-0.5 rounded mt-1">✏️ 編輯</button>
+                            </div>
                         </div>
-                        <div class="text-right">
-                            <p class="font-bold text-blue-300 text-sm">NT$ ${r.amount.toLocaleString()}</p>
-                            <button onclick="editRspModal(${idx})" class="text-[10px] bg-gray-700 text-blue-300 px-2 py-0.5 rounded mt-1">✏️ 編輯</button>
+                        <div class="pt-2 border-t border-gray-700/60 flex justify-between items-center text-[11px] text-gray-300">
+                            <div>
+                                <span>起始: ${r.startYearMonth || '2025-01'}</span>
+                                <span class="ml-2 text-emerald-300 font-medium">已自動扣款 ${calc.monthsPassed} 次</span>
+                            </div>
+                            <div>
+                                <span>目前累積淨值: <strong class="text-emerald-300 font-bold">NT$ ${Math.round(calc.totalAccumulated).toLocaleString()}</strong></span>
+                            </div>
                         </div>
                     </div>
                 `;
             });
+
+            document.getElementById('rsp-monthly-sum').innerText = 'NT$ ' + Math.round(monthlySum).toLocaleString();
+            document.getElementById('rsp-yearly-sum').innerText = 'NT$ ' + Math.round(monthlySum * 12).toLocaleString() + ' / 年';
         }
 
         function editDebtModal(idx) {
@@ -791,16 +929,18 @@
         function editRspModal(idx) {
             currentModalCategory = 'rsp';
             currentModalIndex = idx;
-            const data = idx >= 0 ? rspData[idx] : { target: '', amount: '', day: 6, bank: '' };
+            const data = idx >= 0 ? rspData[idx] : { target: '', amount: '', day: 6, startYearMonth: '2025-01', baseVal: 0, bank: '' };
             
             document.getElementById('edit-modal-title').innerText = idx >= 0 ? '✏️ 編輯定期定額' : '➕ 新增定期定額';
             document.getElementById('modal-delete-btn').classList.toggle('hidden', idx < 0);
             
             const body = document.getElementById('edit-modal-body');
             body.innerHTML = `
-                <div><label class="text-gray-400">扣款標的</label><input id="md-rsp-target" value="${data.target}" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white"></div>
-                <div><label class="text-gray-400">每期金額 (NT$)</label><input id="md-rsp-amount" type="number" value="${data.amount}" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white"></div>
+                <div><label class="text-gray-400">扣款標的 (基金/股票)</label><input id="md-rsp-target" value="${data.target}" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white"></div>
+                <div><label class="text-gray-400">每期扣款金額 (NT$)</label><input id="md-rsp-amount" type="number" value="${data.amount}" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white"></div>
                 <div><label class="text-gray-400">扣款日期 (幾號)</label><input id="md-rsp-day" type="number" value="${data.day}" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white"></div>
+                <div><label class="text-gray-400">開始扣款年月 (YYYY-MM)</label><input id="md-rsp-start" type="month" value="${data.startYearMonth || '2025-01'}" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white"></div>
+                <div><label class="text-gray-400">期初已有市值/本金 (NT$)</label><input id="md-rsp-base" type="number" value="${data.baseVal || 0}" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white"></div>
                 <div><label class="text-gray-400">扣款帳戶</label><input id="md-rsp-bank" value="${data.bank}" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white"></div>
             `;
             document.getElementById('edit-modal').classList.remove('hidden');
@@ -843,6 +983,8 @@
                     target: document.getElementById('md-rsp-target').value,
                     amount: parseFloat(document.getElementById('md-rsp-amount').value) || 0,
                     day: parseInt(document.getElementById('md-rsp-day').value) || 1,
+                    startYearMonth: document.getElementById('md-rsp-start').value || '2025-01',
+                    baseVal: parseFloat(document.getElementById('md-rsp-base').value) || 0,
                     bank: document.getElementById('md-rsp-bank').value
                 };
                 if (currentModalIndex >= 0) rspData[currentModalIndex] = item;
