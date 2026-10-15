@@ -20,10 +20,19 @@
 
     <div id="app-content" class="max-w-lg mx-auto p-4">
         
-        <!-- 雲端連線狀態提示列 -->
-        <div class="mb-3 bg-gray-800 border border-gray-700 rounded-xl p-2.5 flex justify-between items-center text-xs">
-            <span id="sync-status-text" class="text-gray-300">🔄 正在連接 Google Sheet 雲端資料庫...</span>
-            <button onclick="loadFromCloud(true)" class="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1 rounded-lg text-[11px]">手動重新同步</button>
+        <!-- 全域頂部工具列 (任何頁面皆可直接掃描) -->
+        <div class="mb-3 bg-gray-800 border border-gray-700 rounded-xl p-3 flex justify-between items-center text-xs">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-blue-400 text-sm">🏰 資產防禦塔</span>
+                <span id="sync-status-text" class="text-[10px] text-gray-400">🟢 雲端同步中</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="file" id="global-img-input" accept="image/*" class="hidden" onchange="autoScanStockImg(event)">
+                <button onclick="document.getElementById('global-img-input').click()" class="bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow-md flex items-center gap-1">
+                    📸 拍照 / 截圖掃描
+                </button>
+                <button onclick="loadFromCloud(true)" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-2.5 py-1.5 rounded-lg text-[11px]">🔄</button>
+            </div>
         </div>
 
         <!-- 頂部頁面導覽列 -->
@@ -108,14 +117,10 @@
         <div id="page-stocks" class="page-sec hidden space-y-4">
             <div class="flex justify-between items-center bg-gray-800 p-4 rounded-xl border border-gray-700">
                 <div>
-                    <h3 class="font-bold text-sm">📈 股票與質押明細</h3>
-                    <p class="text-[11px] text-gray-400">可上傳截圖自動辨識，或手動新增修改</p>
+                    <h3 class="font-bold text-sm text-white">📈 股票與質押明細</h3>
+                    <p class="text-[11px] text-gray-400">點擊卡片可展開各券商明細與編輯</p>
                 </div>
-                <div class="flex gap-2">
-                    <input type="file" id="stock-img-input" accept="image/*" class="hidden" onchange="autoScanStockImg(event)">
-                    <button onclick="document.getElementById('stock-img-input').click()" class="bg-purple-600 hover:bg-purple-500 text-white text-xs px-2.5 py-1.5 rounded-lg font-medium">📸 截圖掃描</button>
-                    <button onclick="editStockModal(-1)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-2.5 py-1.5 rounded-lg font-medium">+ 新增</button>
-                </div>
+                <button onclick="editStockModal(-1)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow-lg">+ 手動新增</button>
             </div>
             <div class="flex gap-2 overflow-x-auto pb-1 text-xs">
                 <button onclick="filterBroker('全部')" id="btn-全部" class="broker-btn bg-blue-600 text-white px-3 py-1.5 rounded-full font-medium shrink-0">全部 (歸納總覽)</button>
@@ -150,7 +155,7 @@
                     <h3 class="font-bold text-sm">💳 借款與負債明細表</h3>
                     <p class="text-[11px] text-gray-400">學長借款已標示為 <strong class="text-green-400">「+ 資產 (借出應收)」</strong></p>
                 </div>
-                <button onclick="editDebtModal(-1)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg">+ 新增項目</button>
+                <button onclick="editDebtModal(-1)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold">+ 新增項目</button>
             </div>
             <div id="debt-list" class="space-y-3"></div>
         </div>
@@ -162,7 +167,7 @@
                     <h3 class="font-bold text-sm">📅 每月定期定額扣款專區</h3>
                     <p class="text-[11px] text-gray-400">每月固定扣款基金與股票</p>
                 </div>
-                <button onclick="editRspModal(-1)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg">+ 新增扣款</button>
+                <button onclick="editRspModal(-1)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold">+ 新增扣款</button>
             </div>
             <div id="rsp-list" class="space-y-3"></div>
         </div>
@@ -257,7 +262,7 @@
 
         async function loadFromCloud(isManual = false) {
             const statusEl = document.getElementById('sync-status-text');
-            statusEl.innerHTML = "🔄 正在從 Google Sheet 同步最新資料...";
+            statusEl.innerText = "🔄 同步中...";
             try {
                 const res = await fetch(GOOGLE_SCRIPT_URL);
                 const cloudData = await res.json();
@@ -265,14 +270,14 @@
                     stocksData = cloudData.stocks;
                     debtsData = (cloudData.debts && cloudData.debts.length > 0) ? cloudData.debts : debtsData;
                     rspData = (cloudData.rsp && cloudData.rsp.length > 0) ? cloudData.rsp : rspData;
-                    statusEl.innerHTML = "🟢 已與 Google Sheet 即時同步 (" + new Date().toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) + ")";
+                    statusEl.innerText = "🟢 已同步 Google Sheet";
                 } else {
                     stocksData = fullStockData;
-                    statusEl.innerHTML = "☁️ 雲端無資料，已自動寫入完整庫存至 Google Sheet！";
+                    statusEl.innerText = "☁️ 已自動載入庫存至雲端";
                     saveData();
                 }
             } catch (err) {
-                statusEl.innerHTML = "⚠️ 雲端讀取失敗，顯示預設資料";
+                statusEl.innerText = "⚠️ 雲端讀取失敗";
                 stocksData = fullStockData;
             }
             renderAll();
@@ -281,7 +286,7 @@
         async function saveData() {
             renderAll();
             const statusEl = document.getElementById('sync-status-text');
-            statusEl.innerHTML = "☁️ 正在同步資料至 Google Sheet...";
+            statusEl.innerText = "☁️ 寫入雲端中...";
             const payload = JSON.stringify({ stocks: stocksData, debts: debtsData, rsp: rspData });
             
             try {
@@ -291,12 +296,13 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: payload
                 });
-                statusEl.innerHTML = "🟢 資料已成功寫入 Google Sheet 雲端備份！";
+                statusEl.innerText = "🟢 已成功寫入雲端！";
             } catch (err) {
-                statusEl.innerHTML = "❌ 雲端備份失敗";
+                statusEl.innerText = "❌ 雲端備份失敗";
             }
         }
 
+        // 精準改進後的辨識邏輯：不強制寫死 2330
         async function autoScanStockImg(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -310,15 +316,21 @@
                 statusEl.classList.add('hidden');
 
                 const text = ret.data.text;
-                const codeMatch = text.match(/(2330|00830|0050|00924|0052|00631L|00992A|00988A|00982A|00662|00757|00989A|8358)/i);
+                // 抓取 3~6 位數股票或 ETF 代碼
+                const codeMatch = text.match(/\b(2330|00830|0050|00924|0052|00631L|00992A|00988A|00982A|00662|00757|00989A|00981A|8358|\d{4,5}[A-Z]?)\b/i);
                 const amounts = text.match(/\d{1,3}(,\d{3})+|\d+/g);
 
-                const code = codeMatch ? codeMatch[0] : '2330';
+                if (!codeMatch && !amounts) {
+                    alert("⚠️ 截圖較難直接識別文字，請點擊「+ 手動新增」補充輸入！");
+                    return;
+                }
+
+                const code = codeMatch ? codeMatch[0] : '掃描標的';
                 const shares = amounts ? (parseInt(amounts[0].replace(/,/g, '')) || 1000) : 1000;
 
                 stocksData.push({
                     id: Date.now(),
-                    name: '掃描標的 (' + code + ')',
+                    name: code,
                     code: code,
                     shares: shares,
                     price: 100,
@@ -327,10 +339,10 @@
                     pledgeAmount: 0
                 });
                 saveData();
-                alert("✅ 成功辨識標的 (" + code + ") 並已即時同步備份至 Google Sheet！");
+                alert(`✅ 已識別並新增標的「${code}」，可隨時編輯更正股數與價格！`);
             } catch (err) {
                 statusEl.classList.add('hidden');
-                alert("圖片讀取失敗，請再試一次或手動新增");
+                alert("圖片讀取失敗，請點擊「+ 手動新增」填寫");
             }
         }
 
@@ -533,7 +545,7 @@
             if (activeBtn) activeBtn.className = "broker-btn bg-blue-600 text-white px-3 py-1.5 rounded-full font-medium shrink-0";
 
             if (stocksData.length === 0) {
-                listEl.innerHTML = `<div class="text-center py-8 text-gray-500 text-xs">尚無股票庫存資料，請點選上方「📸 截圖掃描」或「+ 新增」</div>`;
+                listEl.innerHTML = `<div class="text-center py-8 text-gray-500 text-xs">尚無股票庫存資料，請點選上方「📸 拍照 / 截圖掃描」或「+ 手動新增」</div>`;
                 return;
             }
 
