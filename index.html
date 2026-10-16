@@ -23,7 +23,7 @@
         <div class="mb-3 bg-gray-800 border border-gray-700 rounded-xl p-3 flex justify-between items-center text-xs">
             <div class="flex items-center gap-2">
                 <span class="font-bold text-blue-400 text-sm">🏰 資產防禦塔</span>
-                <span id="sync-status-text" class="text-[10px] text-gray-400">🟢 基富通(2024+2026)＋鉅亨＋復華 完全校正</span>
+                <span id="sync-status-text" class="text-[10px] text-gray-400">🟢 基金為主・跨平台分割清晰版</span>
             </div>
             <div class="flex items-center gap-2">
                 <button onclick="loadFromCloud()" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-2.5 py-1.5 rounded-lg text-[11px]">🔄 重新載入</button>
@@ -75,14 +75,14 @@
             </div>
         </div>
 
-        <!-- 2. 📅 基金專區 (包含：基富通 2024+2026、鉅亨買基金、復華投信) -->
+        <!-- 2. 📅 基金專區 (以基金為主分割平台) -->
         <div id="page-rsp" class="page-sec hidden space-y-4">
             <div class="bg-gradient-to-r from-emerald-900 to-teal-900 p-4 rounded-xl border border-emerald-700/50 shadow-lg flex justify-between items-center">
                 <div>
-                    <p class="text-xs text-emerald-300">🏆 基金總市值 (跨平台歸納)</p>
+                    <p class="text-xs text-emerald-300">🏆 基金總市值 (跨平台總計)</p>
                     <p id="fund-total-val" class="text-2xl font-black text-white mt-0.5">NT$ 0</p>
                 </div>
-                <button onclick="editRspModal(-1)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">+ 新增部位</button>
+                <button onclick="openModal('fund')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">+ 新增部位</button>
             </div>
 
             <!-- 基金專用圓餅圖 -->
@@ -94,7 +94,7 @@
             </div>
 
             <div class="flex justify-between items-center pt-2">
-                <h3 class="font-bold text-sm text-white">📋 基金標的總覽 (點擊展開基富通/鉅亨/復華明細)</h3>
+                <h3 class="font-bold text-sm text-white">📋 基金標的總覽 (各基金內分割平台)</h3>
             </div>
             <div id="rsp-list" class="space-y-3"></div>
         </div>
@@ -106,7 +106,7 @@
                     <h3 class="font-bold text-sm text-white">📈 股票與質押明細 (42筆)</h3>
                     <p class="text-[11px] text-gray-400">點擊展開各券商庫存</p>
                 </div>
-                <button onclick="editStockModal(-1)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow-lg">+ 新增股票</button>
+                <button onclick="openModal('stock')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow-lg">+ 新增股票</button>
             </div>
             <div class="flex gap-2 overflow-x-auto pb-1 text-xs">
                 <button onclick="filterBroker('全部')" id="btn-全部" class="broker-btn bg-blue-600 text-white px-3 py-1.5 rounded-full font-medium shrink-0">全部</button>
@@ -132,11 +132,47 @@
         <div id="page-liabilities" class="page-sec hidden space-y-4">
             <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex justify-between items-center">
                 <h3 class="font-bold text-sm">💳 借款與負債明細表</h3>
-                <button onclick="editDebtModal(-1)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold">+ 新增借款</button>
+                <button onclick="openModal('debt')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold">+ 新增借款</button>
             </div>
             <div id="debt-list" class="space-y-3"></div>
         </div>
 
+    </div>
+
+    <!-- 手動新增 Modal -->
+    <div id="edit-modal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-sm p-5 space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-2">
+                <h3 id="edit-modal-title" class="font-bold text-base text-blue-400">新增基金部位</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-white">✕</button>
+            </div>
+            <div id="edit-modal-body" class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-gray-400 mb-1">基金標的名稱</label>
+                    <input type="text" id="m-input-name" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white" placeholder="例：安聯台灣科技基金">
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-1">平台/管道</label>
+                    <input type="text" id="m-input-platform" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white" placeholder="例：鉅亨買基金 / 基富通 / 中國信託">
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-1">投資方式/類型</label>
+                    <input type="text" id="m-input-type" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white" placeholder="例：定期定額 / 超底王">
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-1">當前估算市值 (NT$)</label>
+                    <input type="number" id="m-input-val" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white" placeholder="例：55745">
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-1">備註說明 (單位數/筆數)</label>
+                    <input type="text" id="m-input-note" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white" placeholder="例：85.50 單位">
+                </div>
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button onclick="closeModal()" class="w-1/2 bg-gray-700 text-gray-300 py-2.5 rounded-xl text-xs font-semibold">取消</button>
+                <button onclick="saveModalData()" class="w-1/2 bg-blue-600 text-white py-2.5 rounded-xl text-xs font-semibold shadow-lg">儲存並新增</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -188,28 +224,43 @@
             { id: 42, name: '複委託 (美股現值)', code: 'US_STOCK2', shares: 1, price: 32905, broker: '富邦', isPledged: false, pledgeAmount: 0 }
         ];
 
-        // 🚀 跨平台基金數據庫 (包含：基富通 2024+2026 CSV + 鉅亨買基金 + 復華投信截圖)
+        // 🚀 跨平台基金數據庫 (完全以基金為主，各別分割平台)
         let fundRawData = [
-            // --- 1. 基富通 (兩份 CSV 對帳單完整資料) ---
-            { fundName: '安聯台灣科技基金', platform: '基富通', type: '低檔智動投/單筆/定期', val: 180728, note: '237.80 單位 (累計投入 $174,000)' },
-            { fundName: '野村中小基金', platform: '基富通', type: '單筆/定期/智動投', val: 118138, note: '187.20 單位 (累計投入 $106,000)' },
-            { fundName: '統一奔騰基金', platform: '基富通', type: '轉申購轉入', val: 136307, note: '211.20 單位 (含2024瀚亞轉申購入$93,828)' },
-            { fundName: '野村台灣運籌基金', platform: '基富通', type: '轉申購轉入', val: 46344, note: '103.86 單位 (由施羅德轉入 $46,344)' },
-
-            // --- 2. 鉅亨買基金對帳單部位 ---
-            { fundName: '統一奔騰基金', platform: '鉅亨', type: '自選庫存', val: 157963, note: '244.57 單位' },
-            { fundName: '統一奔騰基金', platform: '鉅亨', type: '超底王', val: 168026, note: '260.15 單位' },
-            { fundName: '野村高科技基金', platform: '鉅亨', type: '自選庫存', val: 77927, note: '813.01 單位' },
-            { fundName: '野村高科技基金', platform: '鉅亨', type: '超底王', val: 176363, note: '1,839.99 單位' },
+            // 安聯台灣科技基金 (跨 3 個平台)
+            { fundName: '安聯台灣科技基金', platform: '基富通', type: '低檔智動/單筆/定期', val: 180728, note: '237.80 單位 (累計投入 $174,000)' },
             { fundName: '安聯台灣科技基金', platform: '鉅亨', type: '超底王', val: 55745, note: '85.50 單位' },
-            { fundName: '路博邁5G股票基金', platform: '鉅亨', type: '超底王', val: 37079, note: '1,020.33 單位' },
-            { fundName: '貝萊德世界科技A2美元', platform: '鉅亨', type: '自選庫存', val: 67672, note: '15.10 單位 (138.31 美元)' },
+            { fundName: '安聯台灣科技基金', platform: '中國信託', type: '定期定額', val: 30000, note: '2026/04/25起扣款，累計 6 個月 (共 $30,000)' },
+
+            // 統一奔騰基金 (跨 2 個平台)
+            { fundName: '統一奔騰基金', platform: '鉅亨', type: '自選/超底王', val: 325989, note: '精準 504.72 單位 (對齊 e集保集保庫存)' },
+            { fundName: '統一奔騰基金', platform: '基富通', type: '轉申購庫存', val: 122765, note: '精準 190.20 單位 (已扣質押撥出 21 單位)' },
+
+            // 復華全方位基金 A (復華投信 1,022.80 單位)
+            { fundName: '復華全方位基金 A', platform: '復華投信', type: '單筆投資', val: 200000, note: '精確校正 1,022.80 單位 | 成本 $60,000' },
+
+            // 復華強勢通
+            { fundName: '復華強勢通 (W220003821)', platform: '復華投信', type: '機器人理財', val: 261409, note: '組合理財 | 成本 $120,000' },
+
+            // 復華亞太神龍科技基金
+            { fundName: '復華亞太神龍科技基金', platform: '復華投信', type: '單筆投資', val: 139423, note: '2,894.40 單位 | 成本 $60,000' },
+
+            // 野村高科技基金 (鉅亨)
+            { fundName: '野村高科技基金', platform: '鉅亨', type: '自選/超底王', val: 254290, note: '精準 2,653.00 單位' },
+
+            // 瀚亞日本動力(美元避險) (鉅亨)
             { fundName: '瀚亞日本動力(美元避險)', platform: '鉅亨', type: '自選庫存', val: 123646, note: '61.916 單位' },
 
-            // --- 3. 復華投信截圖部位 ---
-            { fundName: '復華全方位基金 A', platform: '復華投信', type: '單筆投資', val: 160832, note: '822.50 單位 | 報酬率 +168.05%' },
-            { fundName: '復華亞太神龍科技基金', platform: '復華投信', type: '單筆投資', val: 139423, note: '2,894.40 單位 | 報酬率 +132.37%' },
-            { fundName: '復華強勢通 (W220003821)', platform: '復華投信', type: '機器人理財', val: 261409, note: '組合理財 | 報酬率 +117.84%' }
+            // 野村中小基金 (基富通)
+            { fundName: '野村中小基金', platform: '基富通', type: '單筆/定期/智動投', val: 118138, note: '187.20 單位 (累計投入 $106,000)' },
+
+            // 貝萊德世界科技A2美元 (鉅亨)
+            { fundName: '貝萊德世界科技A2美元', platform: '鉅亨', type: '自選庫存', val: 67672, note: '15.10 單位 (138.31 美元)' },
+
+            // 野村台灣運籌基金 (基富通)
+            { fundName: '野村台灣運籌基金', platform: '基富通', type: '轉申購轉入', val: 46344, note: '103.86 單位 (由施羅德轉入)' },
+
+            // 路博邁5G股票基金 (鉅亨)
+            { fundName: '路博邁5G股票基金', platform: '鉅亨', type: '超底王', val: 37079, note: '1,020.33 單位' }
         ];
 
         let stocksData = fullStockData;
@@ -244,77 +295,77 @@
             renderOverview();
             renderStocks();
             renderDebts();
-            renderFundGrouped();
+            renderFundGroupedByFund();
             renderPieChart();
             renderFundPieChart();
         }
 
-        function getGroupedFundData() {
-            const grouped = {};
-            let grandTotal = 0;
-
-            fundRawData.forEach(f => {
-                const name = f.fundName;
-                if (!grouped[name]) {
-                    grouped[name] = { fundName: name, totalVal: 0, items: [] };
-                }
-                grouped[name].totalVal += f.val;
-                grouped[name].items.push(f);
-                grandTotal += f.val;
-            });
-
-            return {
-                list: Object.values(grouped).sort((a, b) => b.totalVal - a.totalVal),
-                grandTotal
-            };
-        }
-
-        function renderFundGrouped() {
+        // 🚀 以【基金標的】為主分類，卡片內部清晰分割呈現各大平台
+        function renderFundGroupedByFund() {
             const listEl = document.getElementById('rsp-list');
             if (!listEl) return;
             listEl.innerHTML = '';
 
-            const { list, grandTotal } = getGroupedFundData();
-            document.getElementById('fund-total-val').innerText = 'NT$ ' + Math.round(grandTotal).toLocaleString();
+            const grouped = {};
+            let grandTotal = 0;
 
-            list.forEach((group, idx) => {
-                const cardId = `fund-group-${idx}`;
-                let detailRows = '';
+            fundRawData.forEach(item => {
+                const fName = item.fundName;
+                if (!grouped[fName]) {
+                    grouped[fName] = { fundName: fName, totalVal: 0, items: [] };
+                }
+                grouped[fName].totalVal += item.val;
+                grouped[fName].items.push(item);
+                grandTotal += item.val;
+            });
 
-                group.items.forEach(item => {
-                    detailRows += `
-                        <div class="flex justify-between items-center py-2 border-b border-gray-700/40 text-xs">
+            const sortedGroup = Object.values(grouped).sort((a,b) => b.totalVal - a.totalVal);
+
+            sortedGroup.forEach((group, idx) => {
+                let platformRowsHtml = '';
+
+                group.items.forEach(p => {
+                    let badgeClass = "bg-blue-950 text-blue-300 border-blue-800";
+                    if (p.platform === '鉅亨') badgeClass = "bg-orange-950 text-orange-300 border-orange-800";
+                    if (p.platform === '基富通') badgeClass = "bg-emerald-950 text-emerald-300 border-emerald-800";
+                    if (p.platform === '復華投信') badgeClass = "bg-purple-950 text-purple-300 border-purple-800";
+                    if (p.platform === '中國信託') badgeClass = "bg-teal-950 text-teal-300 border-teal-800";
+
+                    platformRowsHtml += `
+                        <div class="flex justify-between items-center py-2 border-b border-gray-700/50 text-xs">
                             <div class="flex items-center gap-2">
-                                <span class="bg-emerald-950 text-emerald-300 border border-emerald-800 text-[10px] px-1.5 py-0.5 rounded">${item.platform} - ${item.type}</span>
-                                <span class="text-gray-300 text-[11px]">${item.note}</span>
+                                <span class="border text-[10px] px-2 py-0.5 rounded font-bold ${badgeClass}">${p.platform}</span>
+                                <span class="text-gray-300 text-[11px]">${p.type} (${p.note})</span>
                             </div>
-                            <span class="font-bold text-emerald-300">NT$ ${item.val.toLocaleString()}</span>
+                            <span class="font-bold text-emerald-300">NT$ ${Math.round(p.val).toLocaleString()}</span>
                         </div>
                     `;
                 });
 
                 listEl.innerHTML += `
-                    <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 cursor-pointer hover:border-emerald-500/50 transition" onclick="toggleDetail('${cardId}')">
-                        <div class="flex justify-between items-center">
+                    <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 shadow-md">
+                        <div class="flex justify-between items-start border-b border-gray-700/80 pb-2 mb-2">
                             <div>
                                 <div class="flex items-center gap-2">
                                     <span class="font-bold text-base text-white">${group.fundName}</span>
-                                    <span class="text-[10px] bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full">${group.items.length} 個部位</span>
+                                    <span class="text-[10px] bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full">${group.items.length} 個平台部位</span>
                                 </div>
-                                <p class="text-[11px] text-emerald-400 mt-1">點擊展開基富通/鉅亨/復華明細</p>
                             </div>
                             <div class="text-right">
-                                <span class="text-[10px] text-gray-400">總市值</span>
+                                <span class="text-[10px] text-gray-400">標的總市值</span>
                                 <p class="font-black text-base text-emerald-300">NT$ ${Math.round(group.totalVal).toLocaleString()}</p>
                             </div>
                         </div>
 
-                        <div id="${cardId}" class="hidden mt-3 pt-2 border-t border-gray-700/80 bg-gray-900/50 -mx-4 -mb-4 p-4 rounded-b-xl space-y-1">
-                            ${detailRows}
+                        <!-- 卡片內部平鋪顯示各大平台的分割庫存 -->
+                        <div class="space-y-1 pl-1">
+                            ${platformRowsHtml}
                         </div>
                     </div>
                 `;
             });
+
+            document.getElementById('fund-total-val').innerText = 'NT$ ' + Math.round(grandTotal).toLocaleString();
         }
 
         function renderOverview() {
@@ -327,7 +378,8 @@
                 }
             });
 
-            const { grandTotal: totalFundVal } = getGroupedFundData();
+            let totalFundVal = 0;
+            fundRawData.forEach(f => totalFundVal += f.val);
             const grandTotalAsset = totalStockVal + totalFundVal;
 
             let totalRealDebt = 0, totalAssetDebt = 0;
@@ -441,18 +493,25 @@
             const ctx = document.getElementById('fundPieChart');
             if (!ctx) return;
 
-            const { list, grandTotal } = getGroupedFundData();
-            const labels = list.map(g => `${g.fundName} (${((g.totalVal/grandTotal)*100).toFixed(1)}%)`);
-            const dataValues = list.map(g => g.totalVal);
+            const grouped = {};
+            let grandTotal = 0;
+            fundRawData.forEach(item => {
+                grouped[item.fundName] = (grouped[item.fundName] || 0) + item.val;
+                grandTotal += item.val;
+            });
+
+            const sorted = Object.entries(grouped).sort((a,b) => b[1] - a[1]);
+            const labels = sorted.map(g => `${g[0]} (${((g[1]/grandTotal)*100).toFixed(1)}%)`);
+            const dataValues = sorted.map(g => g[1]);
 
             if (myFundPieChart) myFundPieChart.destroy();
             myFundPieChart = new Chart(ctx.getContext('2d'), {
                 type: 'pie',
                 data: {
                     labels,
-                    datasets: [{ data: dataValues, backgroundColor: ['#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#84cc16', '#f97316'], borderWidth: 0 }]
+                    datasets: [{ data: dataValues, backgroundColor: ['#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#84cc16', '#f97316', '#14b8a6', '#6366f1', '#a855f7'], borderWidth: 0 }]
                 },
-                options: { plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af', font: { size: 10 } } } }, responsive: true, maintainAspectRatio: true }
+                options: { plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af', font: { size: 9 } } } }, responsive: true, maintainAspectRatio: true }
             });
         }
 
@@ -467,10 +526,9 @@
                 grandTotal += mv;
             });
 
-            const { list: fundList } = getGroupedFundData();
-            fundList.forEach(f => {
-                aggregated[f.fundName] = (aggregated[f.fundName] || 0) + f.totalVal;
-                grandTotal += f.totalVal;
+            fundRawData.forEach(f => {
+                aggregated[f.fundName] = (aggregated[f.fundName] || 0) + f.val;
+                grandTotal += f.val;
             });
 
             const sorted = Object.entries(aggregated).sort((a,b) => b[1] - a[1]);
@@ -523,6 +581,32 @@
                     </div>
                 `;
             });
+        }
+
+        function openModal(type) {
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+        }
+
+        function saveModalData() {
+            const name = document.getElementById('m-input-name').value;
+            const platform = document.getElementById('m-input-platform').value || '未指定';
+            const type = document.getElementById('m-input-type').value || '手動新增';
+            const val = parseFloat(document.getElementById('m-input-val').value) || 0;
+            const note = document.getElementById('m-input-note').value || '';
+
+            if (!name) {
+                alert('請輸入標的名稱！');
+                return;
+            }
+
+            fundRawData.push({ fundName: name, platform, type, val, note });
+            renderAll();
+            closeModal();
+            alert('新增成功！已為您寫入並更新清單！');
         }
     </script>
 </body>
