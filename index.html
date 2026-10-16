@@ -23,7 +23,7 @@
         <div class="mb-3 bg-gray-800 border border-gray-700 rounded-xl p-3 flex justify-between items-center text-xs">
             <div class="flex items-center gap-2">
                 <span class="font-bold text-blue-400 text-sm">🏰 資產防禦塔</span>
-                <span id="sync-status-text" class="text-[10px] text-gray-400">🟢 鉅亨＋復華＋基富通 整合版</span>
+                <span id="sync-status-text" class="text-[10px] text-gray-400">🟢 基富通(2024+2026)＋鉅亨＋復華 完全校正</span>
             </div>
             <div class="flex items-center gap-2">
                 <button onclick="loadFromCloud()" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-2.5 py-1.5 rounded-lg text-[11px]">🔄 重新載入</button>
@@ -53,7 +53,6 @@
                 <div class="w-full max-w-[260px] mx-auto my-2">
                     <canvas id="pieChart"></canvas>
                 </div>
-                <div id="pie-percentage-list" class="mt-4 pt-3 border-t border-gray-700/80 space-y-1.5 text-xs"></div>
             </div>
 
             <div class="grid grid-cols-2 gap-3 text-xs">
@@ -76,7 +75,7 @@
             </div>
         </div>
 
-        <!-- 2. 📅 基金專區 (歸納合併版：含鉅亨、復華、基富通) -->
+        <!-- 2. 📅 基金專區 (包含：基富通 2024+2026、鉅亨買基金、復華投信) -->
         <div id="page-rsp" class="page-sec hidden space-y-4">
             <div class="bg-gradient-to-r from-emerald-900 to-teal-900 p-4 rounded-xl border border-emerald-700/50 shadow-lg flex justify-between items-center">
                 <div>
@@ -95,7 +94,7 @@
             </div>
 
             <div class="flex justify-between items-center pt-2">
-                <h3 class="font-bold text-sm text-white">📋 基金標的總覽 (點擊展開跨平台明細)</h3>
+                <h3 class="font-bold text-sm text-white">📋 基金標的總覽 (點擊展開基富通/鉅亨/復華明細)</h3>
             </div>
             <div id="rsp-list" class="space-y-3"></div>
         </div>
@@ -104,7 +103,7 @@
         <div id="page-stocks" class="page-sec hidden space-y-4">
             <div class="flex justify-between items-center bg-gray-800 p-4 rounded-xl border border-gray-700">
                 <div>
-                    <h3 class="font-bold text-sm text-white">📈 股票與質押明細</h3>
+                    <h3 class="font-bold text-sm text-white">📈 股票與質押明細 (42筆)</h3>
                     <p class="text-[11px] text-gray-400">點擊展開各券商庫存</p>
                 </div>
                 <button onclick="editStockModal(-1)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow-lg">+ 新增股票</button>
@@ -143,7 +142,7 @@
     <script>
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-vNLgGKm5anz6vre21T_K7BENgOs8PcZoRa0MdsE5yfWFbYuhB5r697e7XLjI_axN/exec";
 
-        // 股票庫存資料
+        // 股票庫存資料 (42筆)
         const fullStockData = [
             { id: 1, name: '台積電', code: '2330', shares: 1000, price: 2420, broker: '證金', isPledged: true, pledgeAmount: 950000 },
             { id: 2, name: '國泰費城半導體', code: '00830', shares: 28000, price: 83.95, broker: '證金', isPledged: true, pledgeAmount: 759000 },
@@ -189,25 +188,28 @@
             { id: 42, name: '複委託 (美股現值)', code: 'US_STOCK2', shares: 1, price: 32905, broker: '富邦', isPledged: false, pledgeAmount: 0 }
         ];
 
-        // 🚀 基金原始數據（已包含：鉅亨買基金 + 復華投信截圖 + 基富通預留）
+        // 🚀 跨平台基金數據庫 (包含：基富通 2024+2026 CSV + 鉅亨買基金 + 復華投信截圖)
         let fundRawData = [
-            // --- 1. 鉅亨買基金對帳單部位 ---
+            // --- 1. 基富通 (兩份 CSV 對帳單完整資料) ---
+            { fundName: '安聯台灣科技基金', platform: '基富通', type: '低檔智動投/單筆/定期', val: 180728, note: '237.80 單位 (累計投入 $174,000)' },
+            { fundName: '野村中小基金', platform: '基富通', type: '單筆/定期/智動投', val: 118138, note: '187.20 單位 (累計投入 $106,000)' },
+            { fundName: '統一奔騰基金', platform: '基富通', type: '轉申購轉入', val: 136307, note: '211.20 單位 (含2024瀚亞轉申購入$93,828)' },
+            { fundName: '野村台灣運籌基金', platform: '基富通', type: '轉申購轉入', val: 46344, note: '103.86 單位 (由施羅德轉入 $46,344)' },
+
+            // --- 2. 鉅亨買基金對帳單部位 ---
             { fundName: '統一奔騰基金', platform: '鉅亨', type: '自選庫存', val: 157963, note: '244.57 單位' },
             { fundName: '統一奔騰基金', platform: '鉅亨', type: '超底王', val: 168026, note: '260.15 單位' },
-            { fundName: '野村高科技基金', platform: '鉅亨', type: '自選庫存', val: 77927, note: '813.01 單位 (含轉換入)' },
+            { fundName: '野村高科技基金', platform: '鉅亨', type: '自選庫存', val: 77927, note: '813.01 單位' },
             { fundName: '野村高科技基金', platform: '鉅亨', type: '超底王', val: 176363, note: '1,839.99 單位' },
-            { fundName: '安聯台灣科技基金', platform: '鉅亨', type: '超底王', val: 55745, note: '85.50 單位 (含轉申購與逢低加碼)' },
-            { fundName: '路博邁5G股票基金', platform: '鉅亨', type: '超底王', val: 37079, note: '1,020.33 單位 (7月加碼11次)' },
+            { fundName: '安聯台灣科技基金', platform: '鉅亨', type: '超底王', val: 55745, note: '85.50 單位' },
+            { fundName: '路博邁5G股票基金', platform: '鉅亨', type: '超底王', val: 37079, note: '1,020.33 單位' },
             { fundName: '貝萊德世界科技A2美元', platform: '鉅亨', type: '自選庫存', val: 67672, note: '15.10 單位 (138.31 美元)' },
-            { fundName: '瀚亞日本動力(美元避險)', platform: '鉅亨', type: '自選庫存', val: 123646, note: '61.916 單位 (約合 NT$ 123,646)' },
+            { fundName: '瀚亞日本動力(美元避險)', platform: '鉅亨', type: '自選庫存', val: 123646, note: '61.916 單位' },
 
-            // --- 2. 復華投信截圖部位 (全新寫入) ---
-            { fundName: '復華全方位基金 A', platform: '復華投信', type: '單筆投資', val: 160832, note: '822.50 單位 | 成本 $60,000 (報酬率 +168.05%)' },
-            { fundName: '復華亞太神龍科技基金', platform: '復華投信', type: '單筆投資', val: 139423, note: '2,894.40 單位 | 成本 $60,000 (報酬率 +132.37%)' },
-            { fundName: '復華強勢通 (W220003821)', platform: '復華投信', type: '機器人理財', val: 261409, note: '組合理財 | 成本 $120,000 (報酬率 +117.84%)' },
-
-            // --- 3. 基富通 (預留介面，可隨時追加) ---
-            { fundName: '安聯台灣科技基金', platform: '基富通', type: '定期定額', val: 0, note: '預留位置 (隨時可填入金額)' }
+            // --- 3. 復華投信截圖部位 ---
+            { fundName: '復華全方位基金 A', platform: '復華投信', type: '單筆投資', val: 160832, note: '822.50 單位 | 報酬率 +168.05%' },
+            { fundName: '復華亞太神龍科技基金', platform: '復華投信', type: '單筆投資', val: 139423, note: '2,894.40 單位 | 報酬率 +132.37%' },
+            { fundName: '復華強勢通 (W220003821)', platform: '復華投信', type: '機器人理財', val: 261409, note: '組合理財 | 報酬率 +117.84%' }
         ];
 
         let stocksData = fullStockData;
@@ -247,7 +249,6 @@
             renderFundPieChart();
         }
 
-        // 🚀 跨平台標的合併邏輯
         function getGroupedFundData() {
             const grouped = {};
             let grandTotal = 0;
@@ -300,7 +301,7 @@
                                     <span class="font-bold text-base text-white">${group.fundName}</span>
                                     <span class="text-[10px] bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full">${group.items.length} 個部位</span>
                                 </div>
-                                <p class="text-[11px] text-emerald-400 mt-1">點擊展開各平台/管道明細</p>
+                                <p class="text-[11px] text-emerald-400 mt-1">點擊展開基富通/鉅亨/復華明細</p>
                             </div>
                             <div class="text-right">
                                 <span class="text-[10px] text-gray-400">總市值</span>
