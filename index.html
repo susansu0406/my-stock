@@ -23,17 +23,17 @@
         <div class="mb-3 bg-gray-800 border border-gray-700 rounded-xl p-3 flex justify-between items-center text-xs">
             <div class="flex items-center gap-2">
                 <span class="font-bold text-blue-400 text-sm">🏰 資產防禦塔</span>
-                <span id="sync-status-text" class="text-[10px] text-gray-400">🟢 42筆個股 + 鉅亨對帳單全數載入</span>
+                <span id="sync-status-text" class="text-[10px] text-gray-400">🟢 鉅亨＋復華＋基富通 整合版</span>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="loadFromCloud(true)" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-2.5 py-1.5 rounded-lg text-[11px]">🔄 強制同步</button>
+                <button onclick="loadFromCloud()" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-2.5 py-1.5 rounded-lg text-[11px]">🔄 重新載入</button>
             </div>
         </div>
 
         <!-- 頂部頁面導覽列 -->
         <div class="flex justify-around border-b border-gray-800 mb-5 text-xs text-gray-400 bg-gray-900/90 sticky top-0 z-40 py-2">
             <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn pb-2 tab-active">📊 資產總覽</button>
-            <button onclick="switchTab('rsp')" id="tab-rsp" class="tab-btn pb-2">📅 定期定額/基金</button>
+            <button onclick="switchTab('rsp')" id="tab-rsp" class="tab-btn pb-2">📅 基金專區</button>
             <button onclick="switchTab('stocks')" id="tab-stocks" class="tab-btn pb-2">📈 股票質押</button>
             <button onclick="switchTab('history')" id="tab-history" class="tab-btn pb-2">📉 歷史走勢</button>
             <button onclick="switchTab('liabilities')" id="tab-liabilities" class="tab-btn pb-2">💳 借款負債</button>
@@ -42,86 +42,60 @@
         <!-- 1. 📊 資產總覽頁面 -->
         <div id="page-overview" class="page-sec space-y-4">
             <div class="bg-gradient-to-br from-indigo-900 to-blue-900 rounded-2xl p-5 shadow-xl border border-indigo-700/50">
-                <div class="flex justify-between items-center">
-                    <p class="text-xs text-indigo-300 font-medium">個人預估淨資產 (Net Worth)</p>
-                    <span class="text-[10px] bg-green-500/20 text-green-300 px-2 py-0.5 rounded-full border border-green-500/30">42筆股票庫存完整比對</span>
-                </div>
+                <p class="text-xs text-indigo-300 font-medium">預估淨資產 (Net Worth)</p>
                 <p id="net-worth-val" class="text-3xl font-black text-white mt-1">NT$ 0</p>
-                <p class="text-[11px] text-indigo-200 mt-2">公式：股票與基金總額 (NT$ <span id="ov-stock-val">0</span>) ＋ 學長借款 (NT$ <span id="ov-asset-debt-val">0</span>) － 房信貸 (NT$ <span id="ov-debt-val">0</span>) － 質押借款 (NT$ <span id="ov-pledge-debt-val">0</span>)</p>
+                <p class="text-[11px] text-indigo-200 mt-2">股票/基金總額 (NT$ <span id="ov-stock-val">0</span>) ＋ 學長借款 (NT$ <span id="ov-asset-debt-val">0</span>) － 房信貸 (NT$ <span id="ov-debt-val">0</span>) － 質押 (NT$ <span id="ov-pledge-debt-val">0</span>)</p>
             </div>
 
-            <!-- 個股持股比例圓餅圖 -->
+            <!-- 全資產圓餅圖 -->
             <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
-                <h3 class="font-bold text-sm text-gray-200 mb-2 flex justify-between items-center">
-                    <span>🍰 全資產 / 個股持股佔比 (%)</span>
-                </h3>
+                <h3 class="font-bold text-sm text-gray-200 mb-2">🍰 全資產持股佔比 (%)</h3>
                 <div class="w-full max-w-[260px] mx-auto my-2">
                     <canvas id="pieChart"></canvas>
                 </div>
                 <div id="pie-percentage-list" class="mt-4 pt-3 border-t border-gray-700/80 space-y-1.5 text-xs"></div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
-                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
-                    <p class="text-xs text-gray-400">股票 + 基金總資產</p>
-                    <p id="ov-stock-val-2" class="text-lg font-bold text-blue-400 mt-1">NT$ 0</p>
+            <div class="grid grid-cols-2 gap-3 text-xs">
+                <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700">
+                    <p class="text-gray-400">股票 + 基金總資產</p>
+                    <p id="ov-stock-val-2" class="text-base font-bold text-blue-400 mt-1">NT$ 0</p>
                 </div>
-                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
-                    <p class="text-xs text-gray-400">學長借款 (應收資產 +)</p>
-                    <p id="ov-asset-debt-val-2" class="text-lg font-bold text-green-400 mt-1">NT$ 0</p>
+                <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700">
+                    <p class="text-gray-400">學長借款 (+資產)</p>
+                    <p id="ov-asset-debt-val-2" class="text-base font-bold text-green-400 mt-1">NT$ 0</p>
                 </div>
-                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
-                    <p class="text-xs text-gray-400">房貸 + 信貸 (負債 -)</p>
-                    <p id="ov-debt-val-2" class="text-lg font-bold text-red-400 mt-1">NT$ 0</p>
+                <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700">
+                    <p class="text-gray-400">房貸 + 信貸 (-負債)</p>
+                    <p id="ov-debt-val-2" class="text-base font-bold text-red-400 mt-1">NT$ 0</p>
                 </div>
-                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
-                    <p class="text-xs text-gray-400">股票質押借款 (負債 -)</p>
-                    <p id="ov-pledge-debt-val-2" class="text-lg font-bold text-orange-400 mt-1">NT$ 0</p>
-                </div>
-                <div class="col-span-2 bg-gray-800 p-4 rounded-xl border border-gray-700 flex justify-between items-center">
-                    <div>
-                        <p class="text-xs text-gray-400">整體質押維持率</p>
-                        <p id="ov-m-rate" class="text-lg font-bold text-green-400 mt-1">0%</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-xs text-gray-400">質押擔保總市值 / 質押總借款</p>
-                        <p class="text-xs text-gray-300 font-mono mt-1"><span id="ov-pledged-mv">0</span> / <span id="ov-pledged-amt">0</span></p>
-                    </div>
+                <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700">
+                    <p class="text-gray-400">股票質押借款 (-負債)</p>
+                    <p id="ov-pledge-debt-val-2" class="text-base font-bold text-orange-400 mt-1">NT$ 0</p>
                 </div>
             </div>
         </div>
 
-        <!-- 2. 📅 定期定額 / 基金專區 -->
+        <!-- 2. 📅 基金專區 (歸納合併版：含鉅亨、復華、基富通) -->
         <div id="page-rsp" class="page-sec hidden space-y-4">
-            <div class="bg-gradient-to-r from-emerald-900 to-teal-900 p-4 rounded-xl border border-emerald-700/50 shadow-lg">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-xs text-emerald-300">📅 每月定期定額自動扣款總額</p>
-                        <p id="rsp-monthly-sum" class="text-2xl font-black text-white mt-0.5">NT$ 0</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-[10px] text-emerald-200">年度自動累積投資</p>
-                        <p id="rsp-yearly-sum" class="text-sm font-bold text-emerald-300">NT$ 0 / 年</p>
-                    </div>
+            <div class="bg-gradient-to-r from-emerald-900 to-teal-900 p-4 rounded-xl border border-emerald-700/50 shadow-lg flex justify-between items-center">
+                <div>
+                    <p class="text-xs text-emerald-300">🏆 基金總市值 (跨平台歸納)</p>
+                    <p id="fund-total-val" class="text-2xl font-black text-white mt-0.5">NT$ 0</p>
                 </div>
-                <div class="mt-2 pt-2 border-t border-emerald-800/80 text-[11px] text-emerald-200/90 flex justify-between items-center">
-                    <span>⚡ 含 2025/10 ~ 2026/09 對帳單轉申購與超底王加碼紀錄</span>
-                    <button onclick="editRspModal(-1)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2.5 py-1 rounded text-xs">+ 新增項目</button>
-                </div>
+                <button onclick="editRspModal(-1)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">+ 新增部位</button>
             </div>
 
+            <!-- 基金專用圓餅圖 -->
             <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
-                <h3 class="font-bold text-sm text-gray-200 mb-2 flex justify-between items-center">
-                    <span>🏆 基金 / 定期定額專屬佔比 (%)</span>
-                </h3>
+                <h3 class="font-bold text-sm text-gray-200 mb-2">📊 基金標的總佔比 (%)</h3>
                 <div class="w-full max-w-[240px] mx-auto my-2">
                     <canvas id="fundPieChart"></canvas>
                 </div>
-                <div id="fund-percentage-list" class="mt-3 pt-3 border-t border-gray-700/80 space-y-1 text-xs"></div>
             </div>
 
             <div class="flex justify-between items-center pt-2">
-                <h3 class="font-bold text-sm text-white">📋 鉅亨買基金明細 (含自選與超底王)</h3>
+                <h3 class="font-bold text-sm text-white">📋 基金標的總覽 (點擊展開跨平台明細)</h3>
             </div>
             <div id="rsp-list" class="space-y-3"></div>
         </div>
@@ -130,13 +104,13 @@
         <div id="page-stocks" class="page-sec hidden space-y-4">
             <div class="flex justify-between items-center bg-gray-800 p-4 rounded-xl border border-gray-700">
                 <div>
-                    <h3 class="font-bold text-sm text-white">📈 股票與質押明細 (42筆庫存)</h3>
-                    <p class="text-[11px] text-gray-400">點擊卡片可展開各券商明細與編輯</p>
+                    <h3 class="font-bold text-sm text-white">📈 股票與質押明細</h3>
+                    <p class="text-[11px] text-gray-400">點擊展開各券商庫存</p>
                 </div>
-                <button onclick="editStockModal(-1)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow-lg">+ 手動新增</button>
+                <button onclick="editStockModal(-1)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow-lg">+ 新增股票</button>
             </div>
             <div class="flex gap-2 overflow-x-auto pb-1 text-xs">
-                <button onclick="filterBroker('全部')" id="btn-全部" class="broker-btn bg-blue-600 text-white px-3 py-1.5 rounded-full font-medium shrink-0">全部 (歸納總覽)</button>
+                <button onclick="filterBroker('全部')" id="btn-全部" class="broker-btn bg-blue-600 text-white px-3 py-1.5 rounded-full font-medium shrink-0">全部</button>
                 <button onclick="filterBroker('證金')" id="btn-證金" class="broker-btn bg-gray-800 text-gray-300 px-3 py-1.5 rounded-full font-medium shrink-0">證金</button>
                 <button onclick="filterBroker('富邦')" id="btn-富邦" class="broker-btn bg-gray-800 text-gray-300 px-3 py-1.5 rounded-full font-medium shrink-0">富邦</button>
                 <button onclick="filterBroker('國泰')" id="btn-國泰" class="broker-btn bg-gray-800 text-gray-300 px-3 py-1.5 rounded-full font-medium shrink-0">國泰</button>
@@ -158,35 +132,18 @@
         <!-- 5. 💳 借款負債頁面 -->
         <div id="page-liabilities" class="page-sec hidden space-y-4">
             <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex justify-between items-center">
-                <div>
-                    <h3 class="font-bold text-sm">💳 借款與負債明細表</h3>
-                </div>
-                <button onclick="editDebtModal(-1)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold">+ 新增項目</button>
+                <h3 class="font-bold text-sm">💳 借款與負債明細表</h3>
+                <button onclick="editDebtModal(-1)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold">+ 新增借款</button>
             </div>
             <div id="debt-list" class="space-y-3"></div>
         </div>
 
     </div>
 
-    <!-- 編輯 Modal -->
-    <div id="edit-modal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-sm p-5 space-y-4">
-            <div class="flex justify-between items-center border-b border-gray-700 pb-2">
-                <h3 id="edit-modal-title" class="font-bold text-base text-blue-400">編輯資料</h3>
-            </div>
-            <div id="edit-modal-body" class="space-y-3 text-xs"></div>
-            <div class="flex gap-2 pt-2">
-                <button onclick="closeEditModal()" class="w-1/3 bg-gray-700 text-gray-300 py-2.5 rounded-xl text-xs font-semibold">取消</button>
-                <button id="modal-delete-btn" onclick="deleteModalData()" class="w-1/3 bg-red-900/80 text-red-200 py-2.5 rounded-xl text-xs font-semibold hidden">刪除</button>
-                <button onclick="saveModalData()" class="w-1/3 bg-blue-600 text-white py-2.5 rounded-xl text-xs font-semibold shadow-lg">儲存並同步</button>
-            </div>
-        </div>
-    </div>
-
     <script>
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-vNLgGKm5anz6vre21T_K7BENgOs8PcZoRa0MdsE5yfWFbYuhB5r697e7XLjI_axN/exec";
 
-        // 🚀 完整 42 筆股票庫存（一個都不少）
+        // 股票庫存資料
         const fullStockData = [
             { id: 1, name: '台積電', code: '2330', shares: 1000, price: 2420, broker: '證金', isPledged: true, pledgeAmount: 950000 },
             { id: 2, name: '國泰費城半導體', code: '00830', shares: 28000, price: 83.95, broker: '證金', isPledged: true, pledgeAmount: 759000 },
@@ -232,16 +189,25 @@
             { id: 42, name: '複委託 (美股現值)', code: 'US_STOCK2', shares: 1, price: 32905, broker: '富邦', isPledged: false, pledgeAmount: 0 }
         ];
 
-        // 🚀 鉅亨買基金 (2025/10 ~ 2026/09 完整的 12 個月對帳單紀錄)
-        let rspData = [
-            { id: 101, target: '鉅亨自選 - 統一奔騰基金', amount: 0, day: 31, startYearMonth: '2025-10', baseVal: 157963, bank: '鉅亨帳戶', note: '244.57 單位 | 2025/10 至今持續持有' },
-            { id: 102, target: '鉅亨自選 - 野村高科技基金(台幣累積)', amount: 0, day: 31, startYearMonth: '2025-10', baseVal: 77927, bank: '鉅亨帳戶', note: '813.01 單位 | 含 2026/03 轉入之 NT$24,352' },
-            { id: 103, target: '鉅亨自選 - 貝萊德世界科技A2美元', amount: 0, day: 31, startYearMonth: '2025-10', baseVal: 67672, bank: '外幣帳戶', note: '15.10 單位 (138.31 美元)' },
-            { id: 104, target: '鉅亨自選 - 瀚亞日本動力(美元避險)', amount: 0, day: 31, startYearMonth: '2025-10', baseVal: 123646, bank: '外幣帳戶', note: '61.916 單位 (約合 NT$ 123,646)' },
-            { id: 105, target: '鉅亨超底王 - 統一奔騰基金', amount: 0, day: 31, startYearMonth: '2025-10', baseVal: 168026, bank: '鉅亨扣款戶', note: '260.15 單位' },
-            { id: 106, target: '鉅亨超底王 - 野村高科技基金', amount: 0, day: 31, startYearMonth: '2025-10', baseVal: 176363, bank: '鉅亨扣款戶', note: '1,839.99 單位' },
-            { id: 107, target: '鉅亨超底王 - 安聯台灣科技基金', amount: 3000, day: 20, startYearMonth: '2026-05', baseVal: 55745, bank: '鉅亨扣款戶', note: '85.50 單位 | 含 2026/05 轉申購及 7 月逢低加碼' },
-            { id: 108, target: '鉅亨超底王 - 路博邁5G股票基金T累積', amount: 3000, day: 20, startYearMonth: '2026-05', baseVal: 37079, bank: '鉅亨扣款戶', note: '1,020.33 單位 | 2026/07 連續加碼 11 次' }
+        // 🚀 基金原始數據（已包含：鉅亨買基金 + 復華投信截圖 + 基富通預留）
+        let fundRawData = [
+            // --- 1. 鉅亨買基金對帳單部位 ---
+            { fundName: '統一奔騰基金', platform: '鉅亨', type: '自選庫存', val: 157963, note: '244.57 單位' },
+            { fundName: '統一奔騰基金', platform: '鉅亨', type: '超底王', val: 168026, note: '260.15 單位' },
+            { fundName: '野村高科技基金', platform: '鉅亨', type: '自選庫存', val: 77927, note: '813.01 單位 (含轉換入)' },
+            { fundName: '野村高科技基金', platform: '鉅亨', type: '超底王', val: 176363, note: '1,839.99 單位' },
+            { fundName: '安聯台灣科技基金', platform: '鉅亨', type: '超底王', val: 55745, note: '85.50 單位 (含轉申購與逢低加碼)' },
+            { fundName: '路博邁5G股票基金', platform: '鉅亨', type: '超底王', val: 37079, note: '1,020.33 單位 (7月加碼11次)' },
+            { fundName: '貝萊德世界科技A2美元', platform: '鉅亨', type: '自選庫存', val: 67672, note: '15.10 單位 (138.31 美元)' },
+            { fundName: '瀚亞日本動力(美元避險)', platform: '鉅亨', type: '自選庫存', val: 123646, note: '61.916 單位 (約合 NT$ 123,646)' },
+
+            // --- 2. 復華投信截圖部位 (全新寫入) ---
+            { fundName: '復華全方位基金 A', platform: '復華投信', type: '單筆投資', val: 160832, note: '822.50 單位 | 成本 $60,000 (報酬率 +168.05%)' },
+            { fundName: '復華亞太神龍科技基金', platform: '復華投信', type: '單筆投資', val: 139423, note: '2,894.40 單位 | 成本 $60,000 (報酬率 +132.37%)' },
+            { fundName: '復華強勢通 (W220003821)', platform: '復華投信', type: '機器人理財', val: 261409, note: '組合理財 | 成本 $120,000 (報酬率 +117.84%)' },
+
+            // --- 3. 基富通 (預留介面，可隨時追加) ---
+            { fundName: '安聯台灣科技基金', platform: '基富通', type: '定期定額', val: 0, note: '預留位置 (隨時可填入金額)' }
         ];
 
         let stocksData = fullStockData;
@@ -259,7 +225,7 @@
 
         window.onload = function() { loadFromCloud(); };
 
-        async function loadFromCloud(isManual = false) {
+        function loadFromCloud() {
             stocksData = fullStockData;
             renderAll();
         }
@@ -276,26 +242,93 @@
             renderOverview();
             renderStocks();
             renderDebts();
-            renderRsp();
+            renderFundGrouped();
             renderPieChart();
             renderFundPieChart();
         }
 
+        // 🚀 跨平台標的合併邏輯
+        function getGroupedFundData() {
+            const grouped = {};
+            let grandTotal = 0;
+
+            fundRawData.forEach(f => {
+                const name = f.fundName;
+                if (!grouped[name]) {
+                    grouped[name] = { fundName: name, totalVal: 0, items: [] };
+                }
+                grouped[name].totalVal += f.val;
+                grouped[name].items.push(f);
+                grandTotal += f.val;
+            });
+
+            return {
+                list: Object.values(grouped).sort((a, b) => b.totalVal - a.totalVal),
+                grandTotal
+            };
+        }
+
+        function renderFundGrouped() {
+            const listEl = document.getElementById('rsp-list');
+            if (!listEl) return;
+            listEl.innerHTML = '';
+
+            const { list, grandTotal } = getGroupedFundData();
+            document.getElementById('fund-total-val').innerText = 'NT$ ' + Math.round(grandTotal).toLocaleString();
+
+            list.forEach((group, idx) => {
+                const cardId = `fund-group-${idx}`;
+                let detailRows = '';
+
+                group.items.forEach(item => {
+                    detailRows += `
+                        <div class="flex justify-between items-center py-2 border-b border-gray-700/40 text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="bg-emerald-950 text-emerald-300 border border-emerald-800 text-[10px] px-1.5 py-0.5 rounded">${item.platform} - ${item.type}</span>
+                                <span class="text-gray-300 text-[11px]">${item.note}</span>
+                            </div>
+                            <span class="font-bold text-emerald-300">NT$ ${item.val.toLocaleString()}</span>
+                        </div>
+                    `;
+                });
+
+                listEl.innerHTML += `
+                    <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 cursor-pointer hover:border-emerald-500/50 transition" onclick="toggleDetail('${cardId}')">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-base text-white">${group.fundName}</span>
+                                    <span class="text-[10px] bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full">${group.items.length} 個部位</span>
+                                </div>
+                                <p class="text-[11px] text-emerald-400 mt-1">點擊展開各平台/管道明細</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[10px] text-gray-400">總市值</span>
+                                <p class="font-black text-base text-emerald-300">NT$ ${Math.round(group.totalVal).toLocaleString()}</p>
+                            </div>
+                        </div>
+
+                        <div id="${cardId}" class="hidden mt-3 pt-2 border-t border-gray-700/80 bg-gray-900/50 -mx-4 -mb-4 p-4 rounded-b-xl space-y-1">
+                            ${detailRows}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
         function renderOverview() {
-            let totalStockVal = 0, totalPledgeAmt = 0, pledgedMV = 0;
+            let totalStockVal = 0, totalPledgeAmt = 0;
             stocksData.forEach(s => {
                 const mv = (parseFloat(s.shares) || 0) * (parseFloat(s.price) || 0);
                 totalStockVal += mv;
                 if (s.isPledged && s.pledgeAmount > 0) {
                     totalPledgeAmt += parseFloat(s.pledgeAmount) || 0;
-                    pledgedMV += mv;
                 }
             });
 
-            let totalRspAccumulated = 0;
-            rspData.forEach(r => totalRspAccumulated += (parseFloat(r.baseVal) || 0));
+            const { grandTotal: totalFundVal } = getGroupedFundData();
+            const grandTotalAsset = totalStockVal + totalFundVal;
 
-            const grandTotalAsset = totalStockVal + totalRspAccumulated;
             let totalRealDebt = 0, totalAssetDebt = 0;
             debtsData.forEach(d => {
                 if (d.type === 'asset') totalAssetDebt += parseFloat(d.amount) || 0;
@@ -303,7 +336,6 @@
             });
 
             const netWorth = grandTotalAsset + totalAssetDebt - totalRealDebt - totalPledgeAmt;
-            const overallRate = totalPledgeAmt > 0 ? ((pledgedMV / totalPledgeAmt) * 100).toFixed(1) : 0;
 
             document.getElementById('net-worth-val').innerText = 'NT$ ' + Math.round(netWorth).toLocaleString();
             document.getElementById('ov-stock-val').innerText = Math.round(grandTotalAsset).toLocaleString();
@@ -315,10 +347,6 @@
             document.getElementById('ov-asset-debt-val-2').innerText = '+ NT$ ' + Math.round(totalAssetDebt).toLocaleString();
             document.getElementById('ov-debt-val-2').innerText = '- NT$ ' + Math.round(totalRealDebt).toLocaleString();
             document.getElementById('ov-pledge-debt-val-2').innerText = '- NT$ ' + Math.round(totalPledgeAmt).toLocaleString();
-
-            document.getElementById('ov-m-rate').innerText = overallRate + '%';
-            document.getElementById('ov-pledged-mv').innerText = '$' + Math.round(pledgedMV).toLocaleString();
-            document.getElementById('ov-pledged-amt').innerText = '$' + Math.round(totalPledgeAmt).toLocaleString();
         }
 
         function renderStocks() {
@@ -333,40 +361,27 @@
 
             if (activeBroker === '全部') {
                 const aggregated = {};
-                stocksData.forEach((s, originalIndex) => {
+                stocksData.forEach(s => {
                     const key = s.code + '_' + s.name;
                     if (!aggregated[key]) {
-                        aggregated[key] = { code: s.code, name: s.name, totalShares: 0, price: parseFloat(s.price) || 0, totalPledge: 0, pledgedShares: 0, details: [] };
+                        aggregated[key] = { code: s.code, name: s.name, totalShares: 0, price: parseFloat(s.price) || 0, details: [] };
                     }
                     aggregated[key].totalShares += (parseFloat(s.shares) || 0);
-                    aggregated[key].details.push({ ...s, originalIndex });
-                    if (s.isPledged) {
-                        aggregated[key].totalPledge += (parseFloat(s.pledgeAmount) || 0);
-                        aggregated[key].pledgedShares += (parseFloat(s.shares) || 0);
-                    }
+                    aggregated[key].details.push(s);
                 });
 
                 Object.values(aggregated).forEach((item, index) => {
                     const totalMV = item.totalShares * item.price;
-                    const cardId = `detail-${index}`;
-                    
-                    let mRateText = '';
-                    if (item.totalPledge > 0) {
-                        const pledgedMV = item.pledgedShares * item.price;
-                        const mRate = ((pledgedMV / item.totalPledge) * 100).toFixed(1);
-                        mRateText = `<span class="${mRate < 160 ? 'text-red-400 font-bold' : 'text-orange-400'}">質押維持率 ${mRate}%</span>`;
-                    }
+                    const cardId = `stock-detail-${index}`;
 
                     let detailRowsHtml = '';
                     item.details.forEach(d => {
                         const subMV = (parseFloat(d.shares) || 0) * (parseFloat(d.price) || 0);
-                        let subPledgeText = d.isPledged && d.pledgeAmount > 0 ? ` | 借款: $${parseFloat(d.pledgeAmount).toLocaleString()}` : '';
                         detailRowsHtml += `
                             <div class="flex justify-between items-center py-2 border-b border-gray-700/40 text-xs text-gray-300">
                                 <div>
                                     <span class="bg-gray-700 text-blue-300 px-1.5 py-0.5 rounded text-[10px] mr-1.5">${d.broker}</span>
                                     <span>${(parseFloat(d.shares) || 0).toLocaleString()} 股</span>
-                                    <span class="text-orange-400 text-[11px] font-mono ml-1">${subPledgeText}</span>
                                 </div>
                                 <span class="font-medium text-white">NT$ ${Math.round(subMV).toLocaleString()}</span>
                             </div>
@@ -381,21 +396,13 @@
                                         <span class="font-bold text-base text-white">${item.name}</span>
                                         <span class="text-xs text-blue-400 font-mono bg-blue-950 px-2 py-0.5 rounded border border-blue-800">${item.code}</span>
                                     </div>
-                                    <p class="text-[11px] text-blue-300 mt-1">點擊展開各券商明細 (${item.details.length} 筆紀錄)</p>
+                                    <p class="text-[11px] text-blue-300 mt-1">點擊展開各券商明細 (${item.details.length} 筆)</p>
                                 </div>
                                 <div class="text-right">
                                     <span class="text-[10px] text-gray-400">總市值</span>
                                     <p class="font-black text-base text-blue-300">NT$ ${Math.round(totalMV).toLocaleString()}</p>
                                 </div>
                             </div>
-                            <div class="border-t border-gray-700/60 pt-2 mt-2 flex justify-between items-center text-xs">
-                                <div class="text-gray-300">
-                                    <span>現價: <strong class="text-yellow-400">$${item.price.toLocaleString()}</strong></span>
-                                    <span class="ml-2">總股數: <strong class="text-white">${item.totalShares.toLocaleString()}</strong> 股</span>
-                                </div>
-                                <div>${mRateText}</div>
-                            </div>
-                            
                             <div id="${cardId}" class="hidden mt-3 pt-2 border-t border-gray-700/80 bg-gray-900/50 -mx-4 -mb-4 p-4 rounded-b-xl space-y-1">
                                 ${detailRowsHtml}
                             </div>
@@ -432,17 +439,16 @@
         function renderFundPieChart() {
             const ctx = document.getElementById('fundPieChart');
             if (!ctx) return;
-            let grandTotalFund = 0;
-            rspData.forEach(r => grandTotalFund += (parseFloat(r.baseVal) || 0));
 
-            const labels = rspData.map(r => `${r.target} (${((r.baseVal/grandTotalFund)*100).toFixed(1)}%)`);
-            const dataValues = rspData.map(r => r.baseVal);
+            const { list, grandTotal } = getGroupedFundData();
+            const labels = list.map(g => `${g.fundName} (${((g.totalVal/grandTotal)*100).toFixed(1)}%)`);
+            const dataValues = list.map(g => g.totalVal);
 
             if (myFundPieChart) myFundPieChart.destroy();
             myFundPieChart = new Chart(ctx.getContext('2d'), {
                 type: 'pie',
                 data: {
-                    labels: labels,
+                    labels,
                     datasets: [{ data: dataValues, backgroundColor: ['#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#84cc16', '#f97316'], borderWidth: 0 }]
                 },
                 options: { plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af', font: { size: 10 } } } }, responsive: true, maintainAspectRatio: true }
@@ -459,9 +465,11 @@
                 aggregated[s.name] = (aggregated[s.name] || 0) + mv;
                 grandTotal += mv;
             });
-            rspData.forEach(r => {
-                aggregated[r.target] = (aggregated[r.target] || 0) + r.baseVal;
-                grandTotal += r.baseVal;
+
+            const { list: fundList } = getGroupedFundData();
+            fundList.forEach(f => {
+                aggregated[f.fundName] = (aggregated[f.fundName] || 0) + f.totalVal;
+                grandTotal += f.totalVal;
             });
 
             const sorted = Object.entries(aggregated).sort((a,b) => b[1] - a[1]);
@@ -472,7 +480,7 @@
             myPieChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: labels,
+                    labels,
                     datasets: [{ data: dataValues, backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'], borderWidth: 0 }]
                 },
                 options: { plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af', font: { size: 10 } } } }, responsive: true, maintainAspectRatio: true }
@@ -515,36 +523,6 @@
                 `;
             });
         }
-
-        function renderRsp() {
-            const listEl = document.getElementById('rsp-list');
-            if (!listEl) return;
-            listEl.innerHTML = '';
-            let monthlySum = 0;
-
-            rspData.forEach((r) => {
-                monthlySum += (parseFloat(r.amount) || 0);
-                listEl.innerHTML += `
-                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 space-y-1 text-xs">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="font-bold text-sm text-white">${r.target}</p>
-                                <p class="text-gray-400 mt-0.5">${r.note || ''}</p>
-                            </div>
-                            <p class="font-bold text-emerald-400 text-sm">NT$ ${r.baseVal.toLocaleString()}</p>
-                        </div>
-                    </div>
-                `;
-            });
-
-            document.getElementById('rsp-monthly-sum').innerText = 'NT$ ' + Math.round(monthlySum).toLocaleString();
-            document.getElementById('rsp-yearly-sum').innerText = 'NT$ ' + Math.round(monthlySum * 12).toLocaleString() + ' / 年';
-        }
-
-        function editDebtModal() {}
-        function editStockModal() {}
-        function editRspModal() {}
-        function closeEditModal() { document.getElementById('edit-modal').classList.add('hidden'); }
     </script>
 </body>
 </html>
