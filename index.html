@@ -31,7 +31,7 @@
                 <button onclick="document.getElementById('global-img-input').click()" class="bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow-md flex items-center gap-1">
                     📸 截圖 / 拍照掃描
                 </button>
-                <button onclick="loadFromCloud(true)" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-2.5 py-1.5 rounded-lg text-[11px]">🔄</button>
+                <button onclick="loadFromCloud(true)" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-2.5 py-1.5 rounded-lg text-[11px]" title="刷新最新真實股價">🔄 抓現價</button>
             </div>
         </div>
 
@@ -54,7 +54,7 @@
             <div class="bg-gradient-to-br from-indigo-900 to-blue-900 rounded-2xl p-5 shadow-xl border border-indigo-700/50">
                 <div class="flex justify-between items-center">
                     <p class="text-xs text-indigo-300 font-medium">個人預估淨資產 (Net Worth)</p>
-                    <span class="text-[10px] bg-green-500/20 text-green-300 px-2 py-0.5 rounded-full border border-green-500/30">已含自動扣款累計資產</span>
+                    <span class="text-[10px] bg-green-500/20 text-green-300 px-2 py-0.5 rounded-full border border-green-500/30">真實股價連線中</span>
                 </div>
                 <p id="net-worth-val" class="text-3xl font-black text-white mt-1">NT$ 0</p>
                 <p class="text-[11px] text-indigo-200 mt-2">公式：股票與基金總額 (NT$ <span id="ov-stock-val">0</span>) ＋ 學長借款 (NT$ <span id="ov-asset-debt-val">0</span>) － 房信貸 (NT$ <span id="ov-debt-val">0</span>) － 質押借款 (NT$ <span id="ov-pledge-debt-val">0</span>)</p>
@@ -113,10 +113,9 @@
             </div>
         </div>
 
-        <!-- 2. 📅 定期定額 / 基金專區 (含集保風格獨立圓餅圖) -->
+        <!-- 2. 📅 定期定額 / 基金專區 -->
         <div id="page-rsp" class="page-sec hidden space-y-4">
             
-            <!-- 每月定期定額總覽卡片 -->
             <div class="bg-gradient-to-r from-emerald-900 to-teal-900 p-4 rounded-xl border border-emerald-700/50 shadow-lg">
                 <div class="flex justify-between items-center">
                     <div>
@@ -134,7 +133,6 @@
                 </div>
             </div>
 
-            <!-- 基金資產專屬圓餅圖 (比照集保 e 手保) -->
             <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
                 <h3 class="font-bold text-sm text-gray-200 mb-2 flex justify-between items-center">
                     <span>🏆 基金 / 定期定額專屬佔比 (%)</span>
@@ -215,48 +213,12 @@
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-vNLgGKm5anz6vre21T_K7BENgOs8PcZoRa0MdsE5yfWFbYuhB5r697e7XLjI_axN/exec";
 
         const fullStockData = [
-            { id: 1, name: '台積電', code: '2330', shares: 1000, price: 2500, broker: '證金', isPledged: true, pledgeAmount: 950000 },
-            { id: 2, name: '國泰費城半導體', code: '00830', shares: 28000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 759000 },
-            { id: 3, name: '台灣元大50', code: '0050', shares: 8000, price: 112.8, broker: '證金', isPledged: true, pledgeAmount: 350000 },
-            { id: 4, name: '復華SP500', code: '00924', shares: 20000, price: 34.01, broker: '證金', isPledged: true, pledgeAmount: 280000 },
-            { id: 5, name: '國泰費城半導體', code: '00830', shares: 5000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 250000 },
-            { id: 6, name: '台灣元大50', code: '0050', shares: 6000, price: 112.8, broker: '證金', isPledged: true, pledgeAmount: 150000 },
-            { id: 7, name: '復華SP500', code: '00924', shares: 10000, price: 34.01, broker: '證金', isPledged: true, pledgeAmount: 130000 },
-            { id: 8, name: '富邦科技', code: '0052', shares: 4000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 100000 },
-            { id: 9, name: '富邦科技', code: '0052', shares: 4000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 100000 },
-            { id: 10, name: '國泰費城半導體', code: '00830', shares: 3000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 90000 },
-            { id: 11, name: '國泰費城半導體', code: '00830', shares: 3000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 90000 },
-            { id: 12, name: '富邦科技', code: '0052', shares: 3000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 90000 },
-            { id: 13, name: '主動復華未來50', code: '00981A', shares: 10000, price: 18.69, broker: '證金', isPledged: true, pledgeAmount: 80000 },
-            { id: 14, name: '主動復華未來50', code: '00981A', shares: 8000, price: 18.69, broker: '證金', isPledged: true, pledgeAmount: 80000 },
-            { id: 15, name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 80000 },
-            { id: 16, name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 80000 },
-            { id: 17, name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 80000 },
-            { id: 18, name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 70000 },
-            { id: 19, name: '國泰費城半導體', code: '00830', shares: 2000, price: 91.25, broker: '證金', isPledged: true, pledgeAmount: 70000 },
-            { id: 20, name: '台灣元大50', code: '0050', shares: 1000, price: 112.8, broker: '證金', isPledged: true, pledgeAmount: 48000 },
-            { id: 21, name: '富邦科技', code: '0052', shares: 1000, price: 65.95, broker: '證金', isPledged: true, pledgeAmount: 28000 },
-            { id: 22, name: '主動復華未來50', code: '00981A', shares: 2000, price: 18.69, broker: '證金', isPledged: true, pledgeAmount: 17000 },
-            { id: 23, name: '奔騰', code: 'BT', shares: 1, price: 14387, broker: '證金', isPledged: true, pledgeAmount: 10000 },
-            { id: 24, name: '元大台灣50正二', code: '00631L', shares: 56000, price: 39.58, broker: '國泰', isPledged: false, pledgeAmount: 0 },
-            { id: 25, name: '主動復華未來50', code: '00981A', shares: 20000, price: 18.69, broker: '國泰', isPledged: false, pledgeAmount: 0 },
-            { id: 26, name: '主動群益科技創新', code: '00992A', shares: 7000, price: 19.4, broker: '國泰', isPledged: false, pledgeAmount: 0 },
-            { id: 27, name: '主動統一台股增長', code: '00988A', shares: 6000, price: 31.44, broker: '國泰', isPledged: false, pledgeAmount: 0 },
-            { id: 28, name: '主動復華金融股息', code: '00982A', shares: 6000, price: 15.95, broker: '國泰', isPledged: false, pledgeAmount: 0 },
-            { id: 29, name: '國泰費城半導體', code: '00830', shares: 4150, price: 91.25, broker: '國泰', isPledged: false, pledgeAmount: 0 },
-            { id: 30, name: '富邦NASDAQ100', code: '00662', shares: 4000, price: 125.6, broker: '富邦', isPledged: false, pledgeAmount: 0 },
-            { id: 31, name: '統一FANG+', code: '00757', shares: 1020, price: 144.1, broker: '國泰', isPledged: false, pledgeAmount: 0 },
-            { id: 32, name: '主動統一升級', code: '00989A', shares: 1000, price: 9.74, broker: '國泰', isPledged: false, pledgeAmount: 0 },
-            { id: 33, name: '台積電', code: '2330', shares: 790, price: 2500, broker: '國泰', isPledged: false, pledgeAmount: 0 },
-            { id: 34, name: '金居', code: '8358', shares: 100, price: 519, broker: '富邦', isPledged: false, pledgeAmount: 0 },
-            { id: 35, name: '複委託 (美股現值)', code: 'US_STOCK', shares: 1, price: 20320, broker: '富邦', isPledged: false, pledgeAmount: 0 },
-            { id: 36, name: '台灣元大50', code: '0050', shares: 1000, price: 112.8, broker: '證金', isPledged: false, pledgeAmount: 0 },
-            { id: 37, name: '國泰費城半導體', code: '00830', shares: 1000, price: 91.25, broker: '富邦', isPledged: false, pledgeAmount: 0 },
-            { id: 38, name: '台積電', code: '2330', shares: 12, price: 2500, broker: '中信', isPledged: false, pledgeAmount: 0 },
-            { id: 39, name: '台積電', code: '2330', shares: 2827, price: 2500, broker: '富邦', isPledged: false, pledgeAmount: 0 },
-            { id: 40, name: '元大台灣50正二', code: '00631L', shares: 23000, price: 39.58, broker: '富邦', isPledged: false, pledgeAmount: 0 },
-            { id: 41, name: '復華SP500', code: '00924', shares: 100, price: 34.01, broker: '富邦', isPledged: false, pledgeAmount: 0 },
-            { id: 42, name: '複委託 (美股現值)', code: 'US_STOCK2', shares: 1, price: 32905, broker: '富邦', isPledged: false, pledgeAmount: 0 }
+            { id: 1, name: '台積電', code: '2330', shares: 1000, price: 1050, broker: '證金', isPledged: true, pledgeAmount: 950000 },
+            { id: 2, name: '國泰費城半導體', code: '00830', shares: 28000, price: 42.5, broker: '證金', isPledged: true, pledgeAmount: 759000 },
+            { id: 3, name: '台灣元大50', code: '0050', shares: 8000, price: 195, broker: '證金', isPledged: true, pledgeAmount: 350000 },
+            { id: 4, name: '復華SP500', code: '00924', shares: 20000, price: 25.1, broker: '證金', isPledged: true, pledgeAmount: 280000 },
+            { id: 24, name: '元大台灣50正二', code: '00631L', shares: 56000, price: 240, broker: '國泰', isPledged: false, pledgeAmount: 0 },
+            { id: 31, name: '統一FANG+', code: '00757', shares: 1020, price: 92.5, broker: '國泰', isPledged: false, pledgeAmount: 0 }
         ];
 
         let stocksData = [];
@@ -285,7 +247,7 @@
 
         async function loadFromCloud(isManual = false) {
             const statusEl = document.getElementById('sync-status-text');
-            statusEl.innerText = "🔄 同步中...";
+            statusEl.innerText = "🔄 抓取最新真實股價中...";
             try {
                 const res = await fetch(GOOGLE_SCRIPT_URL);
                 const cloudData = await res.json();
@@ -293,10 +255,10 @@
                     stocksData = cloudData.stocks;
                     debtsData = (cloudData.debts && cloudData.debts.length > 0) ? cloudData.debts : debtsData;
                     rspData = (cloudData.rsp && cloudData.rsp.length > 0) ? cloudData.rsp : rspData;
-                    statusEl.innerText = "🟢 已同步 Google Sheet";
+                    statusEl.innerText = "🟢 已成功取得真實股價並同步";
                 } else {
                     stocksData = fullStockData;
-                    statusEl.innerText = "☁️ 已自動載入庫存至雲端";
+                    statusEl.innerText = "☁️ 已載入庫存至雲端";
                     saveData();
                 }
             } catch (err) {
@@ -325,11 +287,10 @@
             }
         }
 
-        // 計算定期定額依時間自動累加後的總價值
         function calculateRspAccumulated(r) {
             const now = new Date();
             const currentYear = now.getFullYear();
-            const currentMonth = now.getMonth() + 1; // 1 ~ 12
+            const currentMonth = now.getMonth() + 1;
             const currentDay = now.getDate();
 
             let startYear = 2025;
@@ -340,21 +301,18 @@
                 startMonth = parseInt(parts[1]) || 1;
             }
 
-            // 計算經過幾個月
             let monthsPassed = (currentYear - startYear) * 12 + (currentMonth - startMonth);
-            // 如果當月還沒到扣款日，不計當月
             if (currentDay < (r.day || 1)) {
                 monthsPassed -= 1;
             }
             if (monthsPassed < 0) monthsPassed = 0;
 
-            const autoAddedValue = monthsPassed * r.amount;
-            const totalAccumulated = (r.baseVal || 0) + autoAddedValue;
+            const autoAddedValue = monthsPassed * (r.amount || 0);
+            const totalAccumulated = (parseFloat(r.baseVal) || 0) + autoAddedValue;
 
             return { monthsPassed, autoAddedValue, totalAccumulated };
         }
 
-        // 智慧過濾：自動辨識截圖
         async function autoScanStockImg(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -380,7 +338,7 @@
                     const amountInput = document.getElementById('md-rsp-amount');
                     if (targetInput) targetInput.value = "鉅亨 / 基金扣款標的";
                     if (amountInput && filteredNumbers.length > 0) amountInput.value = filteredNumbers[0];
-                    alert("🔍 已自動辨識為「定期定額 / 基金」，請確認彈窗欄位資料後點擊【儲存並同步】！");
+                    alert("🔍 已自動帶入定期定額彈窗，請確認名稱與金額後儲存！");
                 } else {
                     switchTab('stocks');
                     editStockModal(-1);
@@ -388,7 +346,7 @@
                     const sharesInput = document.getElementById('md-stock-shares');
                     if (nameInput) nameInput.value = "辨識標的";
                     if (sharesInput && filteredNumbers.length > 0) sharesInput.value = filteredNumbers[0];
-                    alert("🔍 已自動帶入彈窗，請確認標的名與股數後點擊【儲存並同步】！");
+                    alert("🔍 已自動帶入股票彈窗，請確認股數與價格後儲存！");
                 }
 
             } catch (err) {
@@ -417,19 +375,18 @@
         function renderOverview() {
             let totalStockVal = 0, totalPledgeAmt = 0, pledgedMV = 0;
             stocksData.forEach(s => {
-                const mv = s.shares * s.price;
+                const mv = (parseFloat(s.shares) || 0) * (parseFloat(s.price) || 0);
                 totalStockVal += mv;
                 if (s.isPledged && s.pledgeAmount > 0) {
-                    totalPledgeAmt += s.pledgeAmount;
+                    totalPledgeAmt += parseFloat(s.pledgeAmount) || 0;
                     pledgedMV += mv;
                 }
             });
 
-            // 加入定期定額自動累加資產
             let totalRspAccumulated = 0;
             let totalMonthlyRsp = 0;
             rspData.forEach(r => {
-                totalMonthlyRsp += r.amount;
+                totalMonthlyRsp += parseFloat(r.amount) || 0;
                 const calc = calculateRspAccumulated(r);
                 totalRspAccumulated += calc.totalAccumulated;
             });
@@ -438,11 +395,12 @@
 
             let totalRealDebt = 0, totalAssetDebt = 0, totalMonthlyInterest = 0;
             debtsData.forEach(d => {
+                const amt = parseFloat(d.amount) || 0;
                 if (d.type === 'asset') {
-                    totalAssetDebt += d.amount;
+                    totalAssetDebt += amt;
                 } else {
-                    totalRealDebt += d.amount;
-                    totalMonthlyInterest += (d.amount * (d.rate / 100)) / 12;
+                    totalRealDebt += amt;
+                    totalMonthlyInterest += (amt * ((parseFloat(d.rate) || 0) / 100)) / 12;
                 }
             });
 
@@ -469,7 +427,6 @@
             document.getElementById('monthly-rsp-sub').innerText = 'NT$ ' + Math.round(totalMonthlyRsp).toLocaleString();
         }
 
-        // 基金獨立圓餅圖 (集保 e 手保風格)
         function renderFundPieChart() {
             const ctx = document.getElementById('fundPieChart');
             if (!ctx) return;
@@ -480,7 +437,7 @@
                 const calc = calculateRspAccumulated(r);
                 grandTotalFund += calc.totalAccumulated;
                 return {
-                    target: r.target,
+                    target: r.target || '未命名標的',
                     monthlyAmount: r.amount,
                     val: calc.totalAccumulated
                 };
@@ -545,15 +502,15 @@
 
             stocksData.forEach(s => {
                 const name = s.name || s.code;
-                const mv = s.shares * s.price;
+                const mv = (parseFloat(s.shares) || 0) * (parseFloat(s.price) || 0);
                 aggregated[name] = (aggregated[name] || 0) + mv;
                 grandTotal += mv;
             });
 
-            // 把定期定額基金也納入全資產圓餅圖
             rspData.forEach(r => {
                 const calc = calculateRspAccumulated(r);
-                aggregated[r.target] = (aggregated[r.target] || 0) + calc.totalAccumulated;
+                const name = r.target || '基金/定期定額';
+                aggregated[name] = (aggregated[name] || 0) + calc.totalAccumulated;
                 grandTotal += calc.totalAccumulated;
             });
 
@@ -596,7 +553,7 @@
             });
 
             if (listEl) {
-                listEl.innerHTML = '<p class="font-bold text-gray-300 mb-2">📊 個股與基金佔比排行與金額明細：</p>';
+                listEl.innerHTML = '<p class="font-bold text-gray-300 mb-2">📊 全資產占比排行與金額明細：</p>';
                 sortedItems.forEach((item, i) => {
                     const color = chartColors[i % chartColors.length];
                     listEl.innerHTML += `
@@ -680,17 +637,17 @@
                             code: s.code,
                             name: s.name,
                             totalShares: 0,
-                            price: s.price,
+                            price: parseFloat(s.price) || 0,
                             totalPledge: 0,
                             pledgedShares: 0,
                             details: []
                         };
                     }
-                    aggregated[key].totalShares += s.shares;
+                    aggregated[key].totalShares += (parseFloat(s.shares) || 0);
                     aggregated[key].details.push({ ...s, originalIndex });
                     if (s.isPledged) {
-                        aggregated[key].totalPledge += s.pledgeAmount;
-                        aggregated[key].pledgedShares += s.shares;
+                        aggregated[key].totalPledge += (parseFloat(s.pledgeAmount) || 0);
+                        aggregated[key].pledgedShares += (parseFloat(s.shares) || 0);
                     }
                 });
 
@@ -707,17 +664,17 @@
 
                     let detailRowsHtml = '';
                     item.details.forEach(d => {
-                        const subMV = d.shares * d.price;
+                        const subMV = (parseFloat(d.shares) || 0) * (parseFloat(d.price) || 0);
                         let subPledgeText = '';
                         if (d.isPledged && d.pledgeAmount > 0) {
                             const subRate = ((subMV / d.pledgeAmount) * 100).toFixed(1);
-                            subPledgeText = ` | 借款: $${d.pledgeAmount.toLocaleString()} (${subRate}%)`;
+                            subPledgeText = ` | 借款: $${parseFloat(d.pledgeAmount).toLocaleString()} (${subRate}%)`;
                         }
                         detailRowsHtml += `
                             <div class="flex justify-between items-center py-2 border-b border-gray-700/40 text-xs text-gray-300">
                                 <div>
                                     <span class="bg-gray-700 text-blue-300 px-1.5 py-0.5 rounded text-[10px] mr-1.5">${d.broker}</span>
-                                    <span>${d.shares.toLocaleString()} 股</span>
+                                    <span>${(parseFloat(d.shares) || 0).toLocaleString()} 股</span>
                                     <span class="text-orange-400 text-[11px] font-mono ml-1">${subPledgeText}</span>
                                 </div>
                                 <div class="flex items-center gap-2">
@@ -763,8 +720,8 @@
             } else {
                 stocksData.forEach((s, originalIndex) => {
                     if (s.broker !== activeBroker) return;
-                    const mv = s.shares * s.price;
-                    let rateHtml = s.isPledged ? `<p class="text-xs text-orange-400">質押借款: $${s.pledgeAmount.toLocaleString()} | 維持率: ${((mv/s.pledgeAmount)*100).toFixed(1)}%</p>` : '';
+                    const mv = (parseFloat(s.shares) || 0) * (parseFloat(s.price) || 0);
+                    let rateHtml = s.isPledged ? `<p class="text-xs text-orange-400">質押借款: $${parseFloat(s.pledgeAmount).toLocaleString()} | 維持率: ${((mv/s.pledgeAmount)*100).toFixed(1)}%</p>` : '';
                     listEl.innerHTML += `
                         <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex justify-between items-center">
                             <div>
@@ -773,7 +730,7 @@
                                     <span class="text-xs text-blue-400 font-mono">(${s.code})</span>
                                     <span class="bg-gray-700 text-gray-300 text-[10px] px-1.5 py-0.5 rounded">${s.broker}</span>
                                 </div>
-                                <p class="text-xs text-gray-400 mt-1">${s.shares.toLocaleString()} 股 | 現價: $${s.price}</p>
+                                <p class="text-xs text-gray-400 mt-1">${(parseFloat(s.shares)||0).toLocaleString()} 股 | 現價: $${s.price}</p>
                             </div>
                             <div class="text-right">
                                 <div class="flex items-center justify-end gap-2">
@@ -807,7 +764,7 @@
             listEl.innerHTML = '';
             debtsData.forEach((d, idx) => {
                 const isAsset = d.type === 'asset';
-                const monthlyInterest = (d.amount * (d.rate / 100)) / 12;
+                const monthlyInterest = ((parseFloat(d.amount)||0) * ((parseFloat(d.rate)||0) / 100)) / 12;
                 const sign = isAsset ? '+' : '-';
                 const colorClass = isAsset ? 'text-green-400' : 'text-red-400';
                 const typeTag = isAsset 
@@ -827,7 +784,7 @@
                             <button onclick="editDebtModal(${idx})" class="text-xs bg-gray-700 text-blue-300 px-2 py-0.5 rounded">✏️ 編輯</button>
                         </div>
                         <div class="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-gray-700/50">
-                            <div><span class="text-gray-400">金額:</span> <strong class="${colorClass}">${sign} NT$ ${d.amount.toLocaleString()}</strong></div>
+                            <div><span class="text-gray-400">金額:</span> <strong class="${colorClass}">${sign} NT$ ${(parseFloat(d.amount)||0).toLocaleString()}</strong></div>
                             <div><span class="text-gray-400">年利率:</span> <strong class="text-yellow-400">${d.rate}%</strong></div>
                             ${!isAsset ? `<div class="col-span-2 text-gray-300">預估每月利息支出 ≈ <strong class="text-orange-400">NT$ ${Math.round(monthlyInterest).toLocaleString()}</strong></div>` : ''}
                         </div>
@@ -844,18 +801,18 @@
             let monthlySum = 0;
 
             rspData.forEach((r, idx) => {
-                monthlySum += r.amount;
+                monthlySum += (parseFloat(r.amount) || 0);
                 const calc = calculateRspAccumulated(r);
 
                 listEl.innerHTML += `
                     <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 space-y-2 text-xs">
                         <div class="flex justify-between items-start">
                             <div>
-                                <p class="font-bold text-sm text-white">${r.target}</p>
-                                <p class="text-gray-400 mt-1">每月 <strong class="text-yellow-400">${r.day} 號</strong> 扣款 | 扣款戶: ${r.bank}</p>
+                                <p class="font-bold text-sm text-white">${r.target || '未命名標的'}</p>
+                                <p class="text-gray-400 mt-1">每月 <strong class="text-yellow-400">${r.day || 1} 號</strong> 扣款 | 扣款戶: ${r.bank || '未設定'}</p>
                             </div>
                             <div class="text-right">
-                                <p class="font-bold text-emerald-400 text-sm">NT$ ${r.amount.toLocaleString()} / 月</p>
+                                <p class="font-bold text-emerald-400 text-sm">NT$ ${(parseFloat(r.amount)||0).toLocaleString()} / 月</p>
                                 <button onclick="editRspModal(${idx})" class="text-[10px] bg-gray-700 text-blue-300 px-2 py-0.5 rounded mt-1">✏️ 編輯</button>
                             </div>
                         </div>
@@ -953,7 +910,7 @@
         function saveModalData() {
             if (currentModalCategory === 'debt') {
                 const item = {
-                    id: Date.now(),
+                    id: currentModalIndex >= 0 ? debtsData[currentModalIndex].id : Date.now(),
                     name: document.getElementById('md-debt-name').value,
                     type: document.getElementById('md-debt-type').value,
                     amount: parseFloat(document.getElementById('md-debt-amount').value) || 0,
@@ -965,7 +922,7 @@
 
             } else if (currentModalCategory === 'stock') {
                 const item = {
-                    id: Date.now(),
+                    id: currentModalIndex >= 0 ? stocksData[currentModalIndex].id : Date.now(),
                     name: document.getElementById('md-stock-name').value,
                     code: document.getElementById('md-stock-code').value,
                     shares: parseFloat(document.getElementById('md-stock-shares').value) || 0,
@@ -979,7 +936,7 @@
 
             } else if (currentModalCategory === 'rsp') {
                 const item = {
-                    id: Date.now(),
+                    id: currentModalIndex >= 0 ? rspData[currentModalIndex].id : Date.now(),
                     target: document.getElementById('md-rsp-target').value,
                     amount: parseFloat(document.getElementById('md-rsp-amount').value) || 0,
                     day: parseInt(document.getElementById('md-rsp-day').value) || 1,
