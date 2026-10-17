@@ -23,7 +23,7 @@
         <div class="mb-3 bg-gray-800 border border-gray-700 rounded-xl p-3 flex justify-between items-center text-xs">
             <div class="flex items-center gap-2">
                 <span class="font-bold text-blue-400 text-sm">🏰 資產防禦塔</span>
-                <span id="sync-status-text" class="text-[10px] text-gray-400">🟢 基金為主・跨平台分割清晰版</span>
+                <span id="sync-status-text" class="text-[10px] text-gray-400">🟢 基金損益數據已雙向核對修正版</span>
             </div>
             <div class="flex items-center gap-2">
                 <button onclick="loadFromCloud()" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-2.5 py-1.5 rounded-lg text-[11px]">🔄 重新載入</button>
@@ -75,7 +75,7 @@
             </div>
         </div>
 
-        <!-- 2. 📅 基金專區 (以基金為主分割平台) -->
+        <!-- 2. 📅 基金專區 (以基金為主分割平台，包含獲利與成本) -->
         <div id="page-rsp" class="page-sec hidden space-y-4">
             <div class="bg-gradient-to-r from-emerald-900 to-teal-900 p-4 rounded-xl border border-emerald-700/50 shadow-lg flex justify-between items-center">
                 <div>
@@ -94,7 +94,7 @@
             </div>
 
             <div class="flex justify-between items-center pt-2">
-                <h3 class="font-bold text-sm text-white">📋 基金標的總覽 (各基金內分割平台)</h3>
+                <h3 class="font-bold text-sm text-white">📋 基金標的總覽 (含單位、總價、成本與損益)</h3>
             </div>
             <div id="rsp-list" class="space-y-3"></div>
         </div>
@@ -104,7 +104,7 @@
             <div class="flex justify-between items-center bg-gray-800 p-4 rounded-xl border border-gray-700">
                 <div>
                     <h3 class="font-bold text-sm text-white">📈 股票與質押明細 (42筆)</h3>
-                    <p class="text-[11px] text-gray-400">點擊展開各券商庫存</p>
+                    <p class="text-[11px] text-gray-400">顯示總股數，點擊展開券商分配</p>
                 </div>
                 <button onclick="openModal('stock')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow-lg">+ 新增股票</button>
             </div>
@@ -143,29 +143,33 @@
     <div id="edit-modal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-sm p-5 space-y-4">
             <div class="flex justify-between items-center border-b border-gray-700 pb-2">
-                <h3 id="edit-modal-title" class="font-bold text-base text-blue-400">新增基金部位</h3>
+                <h3 id="edit-modal-title" class="font-bold text-base text-blue-400">新增部位</h3>
                 <button onclick="closeModal()" class="text-gray-400 hover:text-white">✕</button>
             </div>
             <div id="edit-modal-body" class="space-y-3 text-xs">
                 <div>
-                    <label class="block text-gray-400 mb-1">基金標的名稱</label>
-                    <input type="text" id="m-input-name" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white" placeholder="例：安聯台灣科技基金">
+                    <label class="block text-gray-400 mb-1">標的名稱</label>
+                    <input type="text" id="m-input-name" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white" placeholder="例：台積電 / 安聯台灣科技基金">
                 </div>
                 <div>
-                    <label class="block text-gray-400 mb-1">平台/管道</label>
-                    <input type="text" id="m-input-platform" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white" placeholder="例：鉅亨買基金 / 基富通 / 中國信託">
+                    <label class="block text-gray-400 mb-1">平台/管道/代碼</label>
+                    <input type="text" id="m-input-platform" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white" placeholder="例：2330 / 鉅亨買基金">
                 </div>
                 <div>
-                    <label class="block text-gray-400 mb-1">投資方式/類型</label>
-                    <input type="text" id="m-input-type" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white" placeholder="例：定期定額 / 超底王">
+                    <label class="block text-gray-400 mb-1">類型/券商</label>
+                    <input type="text" id="m-input-type" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white" placeholder="例：富邦 / 定期定額">
                 </div>
                 <div>
                     <label class="block text-gray-400 mb-1">當前估算市值 (NT$)</label>
-                    <input type="number" id="m-input-val" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white" placeholder="例：55745">
+                    <input type="number" id="m-input-val" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white" placeholder="例：100000">
                 </div>
                 <div>
-                    <label class="block text-gray-400 mb-1">備註說明 (單位數/筆數)</label>
-                    <input type="text" id="m-input-note" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white" placeholder="例：85.50 單位">
+                    <label class="block text-gray-400 mb-1">預估成本 (NT$)</label>
+                    <input type="number" id="m-input-cost" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white" placeholder="例：80000">
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-1">備註說明 (單位數)</label>
+                    <input type="text" id="m-input-note" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white" placeholder="例：504.72 單位">
                 </div>
             </div>
             <div class="flex gap-2 pt-2">
@@ -224,43 +228,43 @@
             { id: 42, name: '複委託 (美股現值)', code: 'US_STOCK2', shares: 1, price: 32905, broker: '富邦', isPledged: false, pledgeAmount: 0 }
         ];
 
-        // 🚀 跨平台基金數據庫 (完全以基金為主，各別分割平台)
+        // 🚀 跨平台基金資料庫 (含正確單位數、最新市值、成本與損益)
         let fundRawData = [
-            // 安聯台灣科技基金 (跨 3 個平台)
-            { fundName: '安聯台灣科技基金', platform: '基富通', type: '低檔智動/單筆/定期', val: 180728, note: '237.80 單位 (累計投入 $174,000)' },
-            { fundName: '安聯台灣科技基金', platform: '鉅亨', type: '超底王', val: 55745, note: '85.50 單位' },
-            { fundName: '安聯台灣科技基金', platform: '中國信託', type: '定期定額', val: 30000, note: '2026/04/25起扣款，累計 6 個月 (共 $30,000)' },
+            // 1. 統一奔騰基金
+            { fundName: '統一奔騰基金', platform: '鉅亨買基金', type: '自選/超底王', val: 385939, cost: 234380, note: '504.72 單位' },
+            { fundName: '統一奔騰基金', platform: '基富通', type: '轉申購庫存', val: 145438, cost: 88328, note: '190.20 單位' },
 
-            // 統一奔騰基金 (跨 2 個平台)
-            { fundName: '統一奔騰基金', platform: '鉅亨', type: '自選/超底王', val: 325989, note: '精準 504.72 單位 (對齊 e集保集保庫存)' },
-            { fundName: '統一奔騰基金', platform: '基富通', type: '轉申購庫存', val: 122765, note: '精準 190.20 單位 (已扣質押撥出 21 單位)' },
+            // 2. 安聯台灣科技基金
+            { fundName: '安聯台灣科技基金', platform: '基富通', type: '智動/單筆/定期', val: 185957, cost: 174000, note: '237.80 單位' },
+            { fundName: '安聯台灣科技基金', platform: '鉅亨買基金', type: '超底王', val: 69832, cost: 51120, note: '89.30 單位' },
+            { fundName: '安聯台灣科技基金', platform: '中國信託', type: '定期定額', val: 30000, cost: 30000, note: '扣款 6期' },
 
-            // 復華全方位基金 A (復華投信 1,022.80 單位)
-            { fundName: '復華全方位基金 A', platform: '復華投信', type: '單筆投資', val: 200000, note: '精確校正 1,022.80 單位 | 成本 $60,000' },
+            // 3. 野村高科技基金
+            { fundName: '野村高科技基金', platform: '鉅亨買基金', type: '自選/超底王', val: 335764, cost: 220000, note: '2,653.00 單位' },
 
-            // 復華強勢通
-            { fundName: '復華強勢通 (W220003821)', platform: '復華投信', type: '機器人理財', val: 261409, note: '組合理財 | 成本 $120,000' },
+            // 4. 野村中小基金
+            { fundName: '野村中小基金', platform: '基富通', type: '單筆/定期/智動', val: 116135, cost: 106000, note: '187.20 單位' },
 
-            // 復華亞太神龍科技基金
-            { fundName: '復華亞太神龍科技基金', platform: '復華投信', type: '單筆投資', val: 139423, note: '2,894.40 單位 | 成本 $60,000' },
+            // 5. 野村台灣運籌基金
+            { fundName: '野村台灣運籌基金', platform: '基富通', type: '轉申購轉入', val: 48623, cost: 46344, note: '103.86 單位' },
 
-            // 野村高科技基金 (鉅亨)
-            { fundName: '野村高科技基金', platform: '鉅亨', type: '自選/超底王', val: 254290, note: '精準 2,653.00 單位' },
+            // 6. 復華全方位基金 A
+            { fundName: '復華全方位基金 A', platform: '復華投信', type: '單筆投資', val: 199998, cost: 60000, note: '1,022.80 單位' },
 
-            // 瀚亞日本動力(美元避險) (鉅亨)
-            { fundName: '瀚亞日本動力(美元避險)', platform: '鉅亨', type: '自選庫存', val: 123646, note: '61.916 單位' },
+            // 7. 復華亞太神龍科技基金
+            { fundName: '復華亞太神龍科技基金', platform: '復華投信', type: '單筆投資', val: 139423, cost: 60000, note: '2,894.40 單位' },
 
-            // 野村中小基金 (基富通)
-            { fundName: '野村中小基金', platform: '基富通', type: '單筆/定期/智動投', val: 118138, note: '187.20 單位 (累計投入 $106,000)' },
+            // 8. 復華強勢通
+            { fundName: '復華強勢通 (W220003821)', platform: '復華投信', type: '機器人理財', val: 261409, cost: 120000, note: '組合理財' },
 
-            // 貝萊德世界科技A2美元 (鉅亨)
-            { fundName: '貝萊德世界科技A2美元', platform: '鉅亨', type: '自選庫存', val: 67672, note: '15.10 單位 (138.31 美元)' },
+            // 9. 瀚亞日本動力基金 (美元)
+            { fundName: '瀚亞日本動力基金 (美元)', platform: '鉅亨買基金', type: '自選庫存', val: 122671, cost: 100000, note: '61.916 單位' },
 
-            // 野村台灣運籌基金 (基富通)
-            { fundName: '野村台灣運籌基金', platform: '基富通', type: '轉申購轉入', val: 46344, note: '103.86 單位 (由施羅德轉入)' },
+            // 10. 貝萊德世界科技基金 A2
+            { fundName: '貝萊德世界科技基金 A2', platform: '鉅亨買基金', type: '自選庫存', val: 68578, cost: 50000, note: '15.10 單位' },
 
-            // 路博邁5G股票基金 (鉅亨)
-            { fundName: '路博邁5G股票基金', platform: '鉅亨', type: '超底王', val: 37079, note: '1,020.33 單位' }
+            // 11. 路博邁5G股票基金
+            { fundName: '路博邁5G股票基金', platform: '鉅亨買基金', type: '超底王', val: 47723, cost: 30000, note: '1,216.79 單位' }
         ];
 
         let stocksData = fullStockData;
@@ -300,44 +304,56 @@
             renderFundPieChart();
         }
 
-        // 🚀 以【基金標的】為主分類，卡片內部清晰分割呈現各大平台
+        // 🚀 以【基金標的】為主分類，卡片內部清晰分割呈現各大平台，並附上總價、成本與損益
         function renderFundGroupedByFund() {
             const listEl = document.getElementById('rsp-list');
             if (!listEl) return;
             listEl.innerHTML = '';
 
             const grouped = {};
-            let grandTotal = 0;
+            let grandTotalVal = 0;
+            let grandTotalCost = 0;
 
             fundRawData.forEach(item => {
                 const fName = item.fundName;
                 if (!grouped[fName]) {
-                    grouped[fName] = { fundName: fName, totalVal: 0, items: [] };
+                    grouped[fName] = { fundName: fName, totalVal: 0, totalCost: 0, items: [] };
                 }
                 grouped[fName].totalVal += item.val;
+                grouped[fName].totalCost += item.cost;
                 grouped[fName].items.push(item);
-                grandTotal += item.val;
+                grandTotalVal += item.val;
+                grandTotalCost += item.cost;
             });
 
             const sortedGroup = Object.values(grouped).sort((a,b) => b.totalVal - a.totalVal);
 
-            sortedGroup.forEach((group, idx) => {
+            sortedGroup.forEach((group) => {
                 let platformRowsHtml = '';
+                const groupProfit = group.totalVal - group.totalCost;
+                const groupProfitPct = group.totalCost > 0 ? (groupProfit / group.totalCost) * 100 : 0;
+                const profitColor = groupProfit >= 0 ? 'text-red-400' : 'text-green-400';
 
                 group.items.forEach(p => {
                     let badgeClass = "bg-blue-950 text-blue-300 border-blue-800";
-                    if (p.platform === '鉅亨') badgeClass = "bg-orange-950 text-orange-300 border-orange-800";
+                    if (p.platform === '鉅亨買基金') badgeClass = "bg-orange-950 text-orange-300 border-orange-800";
                     if (p.platform === '基富通') badgeClass = "bg-emerald-950 text-emerald-300 border-emerald-800";
                     if (p.platform === '復華投信') badgeClass = "bg-purple-950 text-purple-300 border-purple-800";
                     if (p.platform === '中國信託') badgeClass = "bg-teal-950 text-teal-300 border-teal-800";
+
+                    const pProfit = p.val - p.cost;
+                    const pProfitPct = p.cost > 0 ? (pProfit / p.cost) * 100 : 0;
 
                     platformRowsHtml += `
                         <div class="flex justify-between items-center py-2 border-b border-gray-700/50 text-xs">
                             <div class="flex items-center gap-2">
                                 <span class="border text-[10px] px-2 py-0.5 rounded font-bold ${badgeClass}">${p.platform}</span>
-                                <span class="text-gray-300 text-[11px]">${p.type} (${p.note})</span>
+                                <span class="text-gray-300 text-[11px]">${p.note} | 成本: $${p.cost.toLocaleString()}</span>
                             </div>
-                            <span class="font-bold text-emerald-300">NT$ ${Math.round(p.val).toLocaleString()}</span>
+                            <div class="text-right">
+                                <span class="font-bold text-emerald-300">NT$ ${Math.round(p.val).toLocaleString()}</span>
+                                <span class="text-[10px] ${pProfit >= '0' ? 'text-red-400' : 'text-green-400'} ml-1">(${pProfit >= 0 ? '+' : ''}${pProfit.toLocaleString()} / ${pProfitPct.toFixed(1)}%)</span>
+                            </div>
                         </div>
                     `;
                 });
@@ -352,12 +368,12 @@
                                 </div>
                             </div>
                             <div class="text-right">
-                                <span class="text-[10px] text-gray-400">標的總市值</span>
+                                <span class="text-[10px] text-gray-400">總市值 / 損益</span>
                                 <p class="font-black text-base text-emerald-300">NT$ ${Math.round(group.totalVal).toLocaleString()}</p>
+                                <p class="text-xs font-bold ${profitColor}">獲利: ${groupProfit >= 0 ? '+' : ''}${groupProfit.toLocaleString()} (${groupProfitPct >= 0 ? '+' : ''}${groupProfitPct.toFixed(1)}%)</p>
                             </div>
                         </div>
 
-                        <!-- 卡片內部平鋪顯示各大平台的分割庫存 -->
                         <div class="space-y-1 pl-1">
                             ${platformRowsHtml}
                         </div>
@@ -365,7 +381,7 @@
                 `;
             });
 
-            document.getElementById('fund-total-val').innerText = 'NT$ ' + Math.round(grandTotal).toLocaleString();
+            document.getElementById('fund-total-val').innerText = 'NT$ ' + Math.round(grandTotalVal).toLocaleString();
         }
 
         function renderOverview() {
@@ -435,6 +451,7 @@
                                 <div>
                                     <span class="bg-gray-700 text-blue-300 px-1.5 py-0.5 rounded text-[10px] mr-1.5">${d.broker}</span>
                                     <span>${(parseFloat(d.shares) || 0).toLocaleString()} 股</span>
+                                    ${d.isPledged ? '<span class="text-orange-400 text-[10px] ml-1">(已質押)</span>' : ''}
                                 </div>
                                 <span class="font-medium text-white">NT$ ${Math.round(subMV).toLocaleString()}</span>
                             </div>
@@ -449,7 +466,11 @@
                                         <span class="font-bold text-base text-white">${item.name}</span>
                                         <span class="text-xs text-blue-400 font-mono bg-blue-950 px-2 py-0.5 rounded border border-blue-800">${item.code}</span>
                                     </div>
-                                    <p class="text-[11px] text-blue-300 mt-1">點擊展開各券商明細 (${item.details.length} 筆)</p>
+                                    <p class="text-xs text-blue-300 font-semibold mt-1">
+                                        總股數: <span class="text-white font-bold">${item.totalShares.toLocaleString()}</span> 股 
+                                        <span class="text-gray-400 font-normal">| 現價: $${item.price}</span>
+                                    </p>
+                                    <p class="text-[10px] text-gray-400 mt-0.5">點擊展開各券商明細 (${item.details.length} 筆庫存)</p>
                                 </div>
                                 <div class="text-right">
                                     <span class="text-[10px] text-gray-400">總市值</span>
@@ -470,7 +491,7 @@
                         <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex justify-between items-center">
                             <div>
                                 <span class="font-bold text-white">${s.name}</span>
-                                <p class="text-xs text-gray-400 mt-1">${s.shares.toLocaleString()} 股 | 現價: $${s.price}</p>
+                                <p class="text-xs text-gray-300 font-semibold mt-1">${s.shares.toLocaleString()} 股 | 現價: $${s.price}</p>
                             </div>
                             <p class="font-bold text-blue-300 text-sm">NT$ ${Math.round(mv).toLocaleString()}</p>
                         </div>
@@ -596,6 +617,7 @@
             const platform = document.getElementById('m-input-platform').value || '未指定';
             const type = document.getElementById('m-input-type').value || '手動新增';
             const val = parseFloat(document.getElementById('m-input-val').value) || 0;
+            const cost = parseFloat(document.getElementById('m-input-cost').value) || 0;
             const note = document.getElementById('m-input-note').value || '';
 
             if (!name) {
@@ -603,7 +625,7 @@
                 return;
             }
 
-            fundRawData.push({ fundName: name, platform, type, val, note });
+            fundRawData.push({ fundName: name, platform, type, val, cost, note });
             renderAll();
             closeModal();
             alert('新增成功！已為您寫入並更新清單！');
